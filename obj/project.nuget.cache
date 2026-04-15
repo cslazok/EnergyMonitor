@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "FGcBZtItTR0=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\lazok\\ha-dashboard\\ha-dashboard.fsproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\lazok\\.nuget\\packages\\fsharp.core\\10.1.201\\fsharp.core.10.1.201.nupkg.sha512",
+    "C:\\Users\\lazok\\.nuget\\packages\\htmlagilitypack\\1.12.4\\htmlagilitypack.1.12.4.nupkg.sha512",
+    "C:\\Users\\lazok\\.nuget\\packages\\websharper\\10.1.0.667\\websharper.10.1.0.667.nupkg.sha512",
+    "C:\\Users\\lazok\\.nuget\\packages\\websharper.aspnetcore\\10.1.0.667\\websharper.aspnetcore.10.1.0.667.nupkg.sha512",
+    "C:\\Users\\lazok\\.nuget\\packages\\websharper.fsharp\\10.1.0.667\\websharper.fsharp.10.1.0.667.nupkg.sha512",
+    "C:\\Users\\lazok\\.nuget\\packages\\websharper.ui\\10.1.0.667\\websharper.ui.10.1.0.667.nupkg.sha512"
+  ],
+  "logs": []
+}
