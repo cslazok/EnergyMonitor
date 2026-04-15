@@ -48,3 +48,22 @@ h2 {
 .section {
     margin-top: 28px;
 }
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.filter-bar button {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.filter-bar button:hover {
+    background: #e2e8f0;
+}

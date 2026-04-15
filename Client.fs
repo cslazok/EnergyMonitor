@@ -8,6 +8,15 @@ open WebSharper.UI.Client
 [<JavaScript>]
 module Client =
 
+    let selectedRoom = Var.Create "All"
+
+    let roomButton roomName =
+        button [
+            on.click (fun _ _ -> selectedRoom.Value <- roomName)
+        ] [
+            text roomName
+        ]
+
     let formatDeviceState (state: DeviceState) =
         match state with
         | On -> "On"
@@ -53,17 +62,63 @@ module Client =
             ]
         ]
 
-    let sensorsCards =
-        SampleData.sensors
-        |> List.map sensorCard
+    let roomFilterView =
+        div [attr.``class`` "section"] [
+            h2 [] [text "Room Filter"]
+            div [attr.``class`` "filter-bar"] [
+                roomButton "All"
+                roomButton "Living room"
+                roomButton "Bedroom"
+                roomButton "Kitchen"
+            ]
+            p [] [
+                textView (selectedRoom.View |> View.Map (fun room -> "Selected room: " + room))
+            ]
+        ]
 
-    let devicesCards =
-        SampleData.devices
-        |> List.map deviceCard
+    let filteredSensorsView =
+        selectedRoom.View
+        |> View.Map (fun room ->
+            if room = "All" then
+                SampleData.sensors
+            else
+                SampleData.sensors
+                |> List.filter (fun s -> s.Room = room)
+        )
+        |> Doc.BindView (fun sensors ->
+            div [attr.``class`` "section"] [
+                h2 [] [text "Sensors"]
+                div [attr.``class`` "grid"] [
+                    yield! List.map sensorCard sensors
+                ]
+            ]
+        )
 
-    let energyCards =
-        SampleData.energyDays
-        |> List.map energyCard
+    let filteredDevicesView =
+        selectedRoom.View
+        |> View.Map (fun room ->
+            if room = "All" then
+                SampleData.devices
+            else
+                SampleData.devices
+                |> List.filter (fun d -> d.Room = room)
+        )
+        |> Doc.BindView (fun devices ->
+            div [attr.``class`` "section"] [
+                h2 [] [text "Devices"]
+                div [attr.``class`` "grid"] [
+                    yield! List.map deviceCard devices
+                ]
+            ]
+        )
+
+    let energyView =
+        div [attr.``class`` "section"] [
+            h2 [] [text "Energy"]
+            div [attr.``class`` "grid"] [
+                yield! List.map energyCard SampleData.energyDays
+            ]
+        ]
 
     let pageView =
         div [] [
@@ -73,18 +128,10 @@ module Client =
             div [attr.``class`` "page"] [
                 p [] [text "This is a demo smart home dashboard built with F# and WebSharper."]
                 dashboardView
-                div [attr.``class`` "section"] [
-                    h2 [] [text "Sensors"]
-                    div [attr.``class`` "grid"] sensorsCards
-                ]
-                div [attr.``class`` "section"] [
-                    h2 [] [text "Devices"]
-                    div [attr.``class`` "grid"] devicesCards
-                ]
-                div [attr.``class`` "section"] [
-                    h2 [] [text "Energy"]
-                    div [attr.``class`` "grid"] energyCards
-                ]
+                roomFilterView
+                filteredSensorsView
+                filteredDevicesView
+                energyView
             ]
         ]
 
