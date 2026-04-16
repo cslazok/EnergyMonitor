@@ -1,4 +1,4 @@
-!# Live 3-Phase Energy Dashboard (F# WebSharper Project)
+# Live 3-Phase Energy Dashboard (F# WebSharper Project)
 
 Course: Introduction to Functional Programming in F#  
 University of Dunaújváros  
@@ -13,13 +13,15 @@ The application displays real-time electrical measurements from a three-phase en
 
 The goal of the project was to create a practical smart-home monitoring interface using functional programming techniques in F#.
 
+
 ## Motivation
 
-I built this dashboard to monitor the real-time energy consumption of my home electrical system.
+The dashboard was created to monitor the real-time electrical consumption of my home.
 
-Instead of using Home Assistant directly, the application reads processed data from Node-RED and presents it in a simplified custom interface.
+Instead of using Home Assistant directly, the application reads processed measurement data from Node-RED and presents it in a simplified custom interface.
 
-This makes the solution lightweight, flexible and easy to extend.
+This solution is lightweight, flexible and easy to extend.
+
 
 ## Features
 
@@ -29,6 +31,8 @@ This makes the solution lightweight, flexible and easy to extend.
 - Current monitoring
 - Power factor monitoring
 - Automatic refresh every 5 seconds
+- Demo mode support for GitHub Pages deployment
+
 
 ## Technologies used
 
@@ -39,71 +43,7 @@ This makes the solution lightweight, flexible and easy to extend.
 - JSON HTTP API
 - Git / GitHub
 
-## How to run the project
+
+## How to run the project locally
 
 Clone repository:
-
-```
-git clone https://github.com/cslazok/due-fsharp-project.git
-```
-
-Navigate to folder:
-
-```
-cd due-fsharp-project
-```
-
-Build project:
-
-```
-dotnet build
-```
-
-Run application:
-
-```
-dotnet run
-```
-
-Open browser:
-
-```
-http://localhost:5000
-```
-
-Make sure Node-RED endpoint is available:
-
-```
-http://192.168.0.63:1880/energy/live
-```
-
-(or change URL inside Client.fs if needed)
-
-## Screenshot
-
-![Dashboard screenshot](screenshot.png)
-
-## Live demo link
-...
-https://cslazok.github.io/ha-dashboard/
-...
-Local demo example:
-
-```
-http://localhost:5000
-```
-
-## Future improvements
-
-Planned extensions:
-
-- historical energy charts
-- mobile layout optimization
-- alert system for high consumption
-- export measurements to database
-
-## Author
-
-Dániel Csaba Lázok  
-University of Dunaújváros  
-Introduction to Functional Programming in F#[Dashboard screenshot](https://raw.githubusercontent.com/cslazok/ha-dashboard/main/docs/screenshot.png)
