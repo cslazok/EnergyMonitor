@@ -1,3 +1,4 @@
+C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\appsettings.json
 C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\global.json
 C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\package-lock.json
@@ -5,7 +6,6 @@ C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\package.json
 C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\wsconfig.json
 C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\ha-dashboard.staticwebassets.runtime.json
 C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\ha-dashboard.staticwebassets.endpoints.json
-C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\ha-dashboard.exe
 C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\ha-dashboard.deps.json
 C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\ha-dashboard.runtimeconfig.json
 C:\Users\lazok\ha-dashboard\bin\Debug\net10.0\ha-dashboard.dll
@@ -43,14 +43,19 @@ C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.AssemblyInfo.fs
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.fsproj.CoreCompileInputs.cache
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.MvcApplicationPartsAssemblyInfo.fs
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.sourcelink.json
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\rjimswa.dswa.cache.json
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\scopedcss\bundle\ha-dashboard.styles.css
+C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\2puhfcqkib-{0}-wyg0ra4m9d-wyg0ra4m9d.gz
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\io4vuwpmek-{0}-5ipweew5fc-5ipweew5fc.gz
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\ooqtz0ledo-{0}-5ipweew5fc-5ipweew5fc.gz
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\rrdmfoyix1-{0}-j7k5w70rl7-j7k5w70rl7.gz
+C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\rbwfetmopl-{0}-ykcga6516q-ykcga6516q.gz
+C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\7c3oreev7k-{0}-mbnzb5xq0e-mbnzb5xq0e.gz
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\m08rjn0m81-{0}-4odrh4ewiq-4odrh4ewiq.gz
+C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\d47pon4o5y-{0}-6ao3f4lixk-6ao3f4lixk.gz
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\staticwebassets.build.json
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\staticwebassets.build.json.cache
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\staticwebassets.development.json
@@ -60,8 +65,3 @@ C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashb.9E9B145E.Up2Date
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.dll
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.pdb
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.genruntimeconfig.cache
-C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\2puhfcqkib-{0}-wyg0ra4m9d-wyg0ra4m9d.gz
-C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.sourcelink.json
-C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\d47pon4o5y-{0}-6ao3f4lixk-6ao3f4lixk.gz
-C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\rbwfetmopl-{0}-j7nsabe23e-j7nsabe23e.gz
-C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\7c3oreev7k-{0}-h46tl6rxmg-h46tl6rxmg.gz

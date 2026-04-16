@@ -7,10 +7,11 @@ open System
 open System.Reflection
 
 
+[<assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("ha-dashboard-live-data")>]
 [<assembly: System.Reflection.AssemblyCompanyAttribute("ha-dashboard")>]
 [<assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")>]
 [<assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")>]
-[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+15cb8e2226fcc8c2418e3507e84c27051d4a31bb")>]
+[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ecbb51321c0a034811ce55b895b5c5475c8a6db6")>]
 [<assembly: System.Reflection.AssemblyProductAttribute("ha-dashboard")>]
 [<assembly: System.Reflection.AssemblyTitleAttribute("ha-dashboard")>]
 [<assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")>]
