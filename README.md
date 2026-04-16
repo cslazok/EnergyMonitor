@@ -3,8 +3,7 @@
 Course: Introduction to Functional Programming in F#  
 University of Dunaújváros  
 Instructor: Adam Granicz
-Live demo:
-https://cslazok.github.io/due-fsharp-project/
+
 
 ## Project description
 
@@ -85,7 +84,9 @@ http://192.168.0.63:1880/energy/live
 ![Dashboard screenshot](screenshot.png)
 
 ## Live demo link
-
+...
+https://cslazok.github.io/ha-dashboard/
+...
 Local demo example:
 
 ```
