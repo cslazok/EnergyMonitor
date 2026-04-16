@@ -53,8 +53,11 @@ module Client =
     let phaseBPf = Var.Create "-"
     let phaseCPf = Var.Create "-"
 
-    let nodeRedUrl = "http://192.168.0.63:1880/energy/live"
-
+    let nodeRedUrl =
+     if JS.Window.Location.Host.Contains("github.io") then
+      "demo-energy.json"
+     else
+        "http://192.168.0.63:1880/energy/live"
     let getLiveEnergy () =
         promise {
             let! response = JS.Fetch nodeRedUrl
