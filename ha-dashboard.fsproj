@@ -6,16 +6,22 @@
     <UseAppHost>false</UseAppHost>
   </PropertyGroup>
 
-<ItemGroup>
-  <Compile Include="Models.fs" />
-  <Compile Include="SampleData.fs" />
-  <Compile Include="Client.fs" />
-  <Compile Include="Startup.fs" />
-  <None Include="package.json" />
-  <None Include="esbuild.config.mjs" />
-  <None Include="vite.config.js" />
-  <None Include="wsconfig.json" />
-</ItemGroup>
+  <ItemGroup>
+    <Compile Include="Models.fs" />
+    <Compile Include="SampleData.fs" />
+    <Compile Include="Client.fs" />
+    <Compile Include="Startup.fs" />
+    <None Include="package.json" />
+    <None Include="esbuild.config.mjs" />
+    <None Include="vite.config.js" />
+    <None Include="wsconfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="wwwroot\**\*">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="WebSharper" Version="10.1.0.667" />
