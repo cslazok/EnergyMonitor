@@ -1,0 +1,8 @@
+[general]
+connection = "Host=192.168.0.99;Port=5432;Database=energydb;Username=energyuser;Password=ujjelszo123"
+output = "DbLive.fs"
+namespace = "HaDashboard.DbLive"
+
+[filters]
+include = [ "shelly_3em_data" ]
+exclude = [ ]

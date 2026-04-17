@@ -1,0 +1,13 @@
+[general]
+connection = "Host=192.168.0.99;Port=5432;Database=postgres;Username=energyuser;Password=ujjelszo123"
+output = "DbEnergy.fs"
+namespace = "HaDashboard.DbEnergy"
+cli_mutable = true
+
+[sqlhydra_query_integration]
+provider_db_type_attributes = true
+table_declarations = true
+
+[filters]
+include = ["public.shelly_3em_energy"]
+exclude = []

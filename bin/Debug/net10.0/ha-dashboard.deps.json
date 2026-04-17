@@ -8,7 +8,7 @@
     ".NETCoreApp,Version=v10.0": {
       "ha-dashboard/1.0.0": {
         "dependencies": {
-          "FSharp.Core": "10.1.201",
+          "FSharp.Core": "10.0.106",
           "WebSharper": "10.1.0.667",
           "WebSharper.AspNetCore": "10.1.0.667",
           "WebSharper.UI": "10.1.0.667"
@@ -17,11 +17,11 @@
           "ha-dashboard.dll": {}
         }
       },
-      "FSharp.Core/10.1.201": {
+      "FSharp.Core/10.0.106": {
         "runtime": {
           "lib/netstandard2.1/FSharp.Core.dll": {
-            "assemblyVersion": "10.1.0.0",
-            "fileVersion": "10.102.126.15422"
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.1.626.17701"
           }
         },
         "resources": {
@@ -76,7 +76,7 @@
       },
       "WebSharper/10.1.0.667": {
         "dependencies": {
-          "FSharp.Core": "10.1.201"
+          "FSharp.Core": "10.0.106"
         },
         "runtime": {
           "lib/netstandard2.0/WebSharper.Core.JavaScript.dll": {
@@ -148,12 +148,12 @@
       "serviceable": false,
       "sha512": ""
     },
-    "FSharp.Core/10.1.201": {
+    "FSharp.Core/10.0.106": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-s5w9LWYurZ9yZdIppoIaYLkRadyT5s3u0wbQCb0J4bQd3ubIlIWQ3Nd5+ll1y3pv5OnTS373dP8T1S/BP46QXg==",
-      "path": "fsharp.core/10.1.201",
-      "hashPath": "fsharp.core.10.1.201.nupkg.sha512"
+      "sha512": "sha512-d32Lw0Z1wmiLl2LE28OGcwyer4SIgd/7TQAUikPnGV5W/b7nIbKjjKLWlF4e7MU4o9dntZiSe3oYIYy9mSV/rw==",
+      "path": "fsharp.core/10.0.106",
+      "hashPath": "fsharp.core.10.0.106.nupkg.sha512"
     },
     "HtmlAgilityPack/1.12.4": {
       "type": "package",

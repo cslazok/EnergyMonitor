@@ -210,7 +210,7 @@ let _c=Lazy((_i) => class $StartupCode_Client {
     this.phaseAPf=_c_1.Create_1("-");
     this.phaseBPf=_c_1.Create_1("-");
     this.phaseCPf=_c_1.Create_1("-");
-    this.nodeRedUrl="http://192.168.0.63:1880/energy/live";
+    this.nodeRedUrl=globalThis.location.host.indexOf("github.io")!=-1?"demo-energy.json":"http://192.168.0.63:1880/energy/live";
     this.summaryView=Doc.Element("div", [Attr.Create("class", "section")], [Doc.Element("h2", [], [Doc.TextNode("Energy Overview")]), Doc.Element("div", [Attr.Create("class", "grid")], [overviewCard("Total active power", Doc.TextView(totalPower().View)), overviewCard("Total current", Doc.TextView(totalCurrent().View)), overviewCard("Total apparent power", Doc.TextView(totalApparentPower().View))])]);
     this.phasePowerView=Doc.Element("div", [Attr.Create("class", "section")], [Doc.Element("h2", [], [Doc.TextNode("Phase Power")]), Doc.Element("div", [Attr.Create("class", "grid")], [overviewCard("L1 power", Doc.TextView(phaseAPower().View)), overviewCard("L2 power", Doc.TextView(phaseBPower().View)), overviewCard("L3 power", Doc.TextView(phaseCPower().View))])]);
     this.phaseVoltageView=Doc.Element("div", [Attr.Create("class", "section")], [Doc.Element("h2", [], [Doc.TextNode("Phase Voltage")]), Doc.Element("div", [Attr.Create("class", "grid")], [overviewCard("L1 voltage", Doc.TextView(phaseAVoltage().View)), overviewCard("L2 voltage", Doc.TextView(phaseBVoltage().View)), overviewCard("L3 voltage", Doc.TextView(phaseCVoltage().View))])]);

@@ -4,20 +4,22 @@
     <RestoreSuccess Condition=" '$(RestoreSuccess)' == '' ">True</RestoreSuccess>
     <RestoreTool Condition=" '$(RestoreTool)' == '' ">NuGet</RestoreTool>
     <ProjectAssetsFile Condition=" '$(ProjectAssetsFile)' == '' ">$(MSBuildThisFileDirectory)project.assets.json</ProjectAssetsFile>
-    <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
-    <NuGetPackageFolders Condition=" '$(NuGetPackageFolders)' == '' ">C:\Users\lazok\.nuget\packages\;C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages</NuGetPackageFolders>
+    <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">/Users/daniellazok/.nuget/packages/</NuGetPackageRoot>
+    <NuGetPackageFolders Condition=" '$(NuGetPackageFolders)' == '' ">/Users/daniellazok/.nuget/packages/</NuGetPackageFolders>
     <NuGetProjectStyle Condition=" '$(NuGetProjectStyle)' == '' ">PackageReference</NuGetProjectStyle>
     <NuGetToolVersion Condition=" '$(NuGetToolVersion)' == '' ">7.0.0</NuGetToolVersion>
   </PropertyGroup>
   <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
-    <SourceRoot Include="C:\Users\lazok\.nuget\packages\" />
-    <SourceRoot Include="C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\" />
+    <SourceRoot Include="/Users/daniellazok/.nuget/packages/" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
-    <PkgFSharp_Core Condition=" '$(PkgFSharp_Core)' == '' ">C:\Users\lazok\.nuget\packages\fsharp.core\10.1.201</PkgFSharp_Core>
-    <PkgWebSharper Condition=" '$(PkgWebSharper)' == '' ">C:\Users\lazok\.nuget\packages\websharper\10.1.0.667</PkgWebSharper>
-    <PkgWebSharper_UI Condition=" '$(PkgWebSharper_UI)' == '' ">C:\Users\lazok\.nuget\packages\websharper.ui\10.1.0.667</PkgWebSharper_UI>
-    <PkgWebSharper_FSharp Condition=" '$(PkgWebSharper_FSharp)' == '' ">C:\Users\lazok\.nuget\packages\websharper.fsharp\10.1.0.667</PkgWebSharper_FSharp>
-    <PkgWebSharper_AspNetCore Condition=" '$(PkgWebSharper_AspNetCore)' == '' ">C:\Users\lazok\.nuget\packages\websharper.aspnetcore\10.1.0.667</PkgWebSharper_AspNetCore>
+    <PkgFSharp_Core Condition=" '$(PkgFSharp_Core)' == '' ">/Users/daniellazok/.nuget/packages/fsharp.core/10.1.201</PkgFSharp_Core>
+    <PkgWebSharper Condition=" '$(PkgWebSharper)' == '' ">/Users/daniellazok/.nuget/packages/websharper/10.1.0.667</PkgWebSharper>
+    <PkgWebSharper_UI Condition=" '$(PkgWebSharper_UI)' == '' ">/Users/daniellazok/.nuget/packages/websharper.ui/10.1.0.667</PkgWebSharper_UI>
+    <PkgWebSharper_FSharp Condition=" '$(PkgWebSharper_FSharp)' == '' ">/Users/daniellazok/.nuget/packages/websharper.fsharp/10.1.0.667</PkgWebSharper_FSharp>
+    <PkgWebSharper_AspNetCore Condition=" '$(PkgWebSharper_AspNetCore)' == '' ">/Users/daniellazok/.nuget/packages/websharper.aspnetcore/10.1.0.667</PkgWebSharper_AspNetCore>
+    <PkgSqlHydra_Query Condition=" '$(PkgSqlHydra_Query)' == '' ">/Users/daniellazok/.nuget/packages/sqlhydra.query/3.6.0</PkgSqlHydra_Query>
+    <PkgNpgsql Condition=" '$(PkgNpgsql)' == '' ">/Users/daniellazok/.nuget/packages/npgsql/10.0.2</PkgNpgsql>
+    <PkgMicrosoft_Data_Sqlite Condition=" '$(PkgMicrosoft_Data_Sqlite)' == '' ">/Users/daniellazok/.nuget/packages/microsoft.data.sqlite/10.0.6</PkgMicrosoft_Data_Sqlite>
   </PropertyGroup>
 </Project>

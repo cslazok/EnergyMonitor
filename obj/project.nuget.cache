@@ -1,15 +1,25 @@
 {
   "version": 2,
-  "dgSpecHash": "FGcBZtItTR0=",
+  "dgSpecHash": "ziDdQC6VbLg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\lazok\\ha-dashboard\\ha-dashboard.fsproj",
+  "projectFilePath": "/Users/daniellazok/ha-dashboard/ha-dashboard.fsproj",
   "expectedPackageFiles": [
-    "C:\\Users\\lazok\\.nuget\\packages\\fsharp.core\\10.1.201\\fsharp.core.10.1.201.nupkg.sha512",
-    "C:\\Users\\lazok\\.nuget\\packages\\htmlagilitypack\\1.12.4\\htmlagilitypack.1.12.4.nupkg.sha512",
-    "C:\\Users\\lazok\\.nuget\\packages\\websharper\\10.1.0.667\\websharper.10.1.0.667.nupkg.sha512",
-    "C:\\Users\\lazok\\.nuget\\packages\\websharper.aspnetcore\\10.1.0.667\\websharper.aspnetcore.10.1.0.667.nupkg.sha512",
-    "C:\\Users\\lazok\\.nuget\\packages\\websharper.fsharp\\10.1.0.667\\websharper.fsharp.10.1.0.667.nupkg.sha512",
-    "C:\\Users\\lazok\\.nuget\\packages\\websharper.ui\\10.1.0.667\\websharper.ui.10.1.0.667.nupkg.sha512"
+    "/Users/daniellazok/.nuget/packages/fastexpressioncompiler/5.1.1/fastexpressioncompiler.5.1.1.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/fsharp.core/10.1.201/fsharp.core.10.1.201.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/htmlagilitypack/1.12.4/htmlagilitypack.1.12.4.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/microsoft.data.sqlite/10.0.6/microsoft.data.sqlite.10.0.6.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/microsoft.data.sqlite.core/10.0.6/microsoft.data.sqlite.core.10.0.6.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/npgsql/10.0.2/npgsql.10.0.2.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/sqlhydra.query/3.6.0/sqlhydra.query.3.6.0.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/sqlitepclraw.bundle_e_sqlite3/2.1.11/sqlitepclraw.bundle_e_sqlite3.2.1.11.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/sqlitepclraw.core/2.1.11/sqlitepclraw.core.2.1.11.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/sqlitepclraw.lib.e_sqlite3/2.1.11/sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/sqlitepclraw.provider.e_sqlite3/2.1.11/sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/sqlkata/2.4.0/sqlkata.2.4.0.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/websharper/10.1.0.667/websharper.10.1.0.667.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/websharper.aspnetcore/10.1.0.667/websharper.aspnetcore.10.1.0.667.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/websharper.fsharp/10.1.0.667/websharper.fsharp.10.1.0.667.nupkg.sha512",
+    "/Users/daniellazok/.nuget/packages/websharper.ui/10.1.0.667/websharper.ui.10.1.0.667.nupkg.sha512"
   ],
   "logs": []
 }

@@ -1,0 +1,11 @@
+[general]
+connection = "Host=192.168.0.99;Port=5432;Database=energydb;Username=energyuser;Password=ujjelszo123"
+output = "DbLive.fs"
+namespace = "HaDashboard.DbLive"
+cli_mutable = true
+[sqlhydra_query_integration]
+provider_db_type_attributes = true
+table_declarations = true
+[filters]
+include = []
+exclude = []
