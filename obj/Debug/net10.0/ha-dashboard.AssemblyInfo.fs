@@ -11,7 +11,7 @@ open System.Reflection
 [<assembly: System.Reflection.AssemblyCompanyAttribute("ha-dashboard")>]
 [<assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")>]
 [<assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")>]
-[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7aff7b2ed4db0265395f99e49ea4cb2f3c37f29e")>]
+[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb14e5879a8559c032b81cd029788e71cd35bc30")>]
 [<assembly: System.Reflection.AssemblyProductAttribute("ha-dashboard")>]
 [<assembly: System.Reflection.AssemblyTitleAttribute("ha-dashboard")>]
 [<assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")>]

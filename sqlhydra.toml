@@ -1,0 +1,5 @@
+[general]
+provider = "Npgsql"
+connection = "Host=VA_IP_CIM;Database=postgres;Username=energyuser;Password=passw"
+output = "Db.fs"
+namespace = "HaDashboard.Db"
