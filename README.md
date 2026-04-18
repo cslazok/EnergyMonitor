@@ -102,7 +102,6 @@ Live Demo
 
 The project is available online via GitHub Pages:
 
-https://cslazok.github.io/ha-dashboard/
 
 Since GitHub Pages supports only static hosting, the demo version uses sample measurement data stored in a JSON file instead of a live database connection.
 
