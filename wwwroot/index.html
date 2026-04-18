@@ -134,18 +134,26 @@
     <script>
         let allData = [], chart = null;
         async function loadData() {
-            const btn = document.querySelector('.refresh-btn');
-     btn.classList.add('loading');
-        try {
-        const response = await fetch('./demo-live.json');
+    const btn = document.querySelector('.refresh-btn');
+    btn.classList.add('loading');
+    document.getElementById('status-text').textContent = 'Loading demo data...';
+    try {
+        // GitHub Pages-en a relatív útvonal működik
+        const fileName = window.location.pathname.includes('energy') ? 'demo-energy.json' : 'demo-live.json';
+        const response = await fetch(fileName);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         allData = await response.json();
-        document.getElementById('status-text').textContent = 'Demo Mode (Local Data)';
+        document.getElementById('status-text').textContent = 'Demo Mode · Local Data';
+        document.getElementById('last-updated').textContent = 'Demo dataset';
         renderTable();
     } catch(e) {
-        document.getElementById('status-text').textContent = 'Error loading demo data';
+        console.error('Load error:', e);
+        document.getElementById('status-text').textContent = 'Error: ' + e.message;
     }
     btn.classList.remove('loading');
-                }
+}
+    btn.classList.remove('loading');
+                
             try {
                 const response = await fetch('/api/history');
                 allData = await response.json();
