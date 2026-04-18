@@ -1,14 +1,18 @@
-﻿<a href="energy.html" class="btn btn-outline-primary mb-3 ms-2">Energia összesítő →</a>
+<!DOCTYPE html>
 <html>
+<meta charset="UTF-8">
 <head>
-    <title>Energy Monitor</title>
+    <title>Energy Monitor - Energia</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-light">
     <div class="container mt-5">
-        <h1>Energy Monitor History</h1>
-        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Energia összesítő</h1>
+            <a href="index.html" class="btn btn-outline-secondary">← Vissza a mérésekhez</a>
+        </div>
+
         <div class="row mb-3 align-items-end">
             <div class="col-auto">
                 <label class="form-label">Időpont tól</label>
@@ -47,7 +51,14 @@
 
         <table class="table table-dark table-striped">
             <thead>
-                <tr><th>Időpont</th><th>Teljesítmény (W)</th><th>Feszültség (V)</th></tr>
+                <tr>
+                    <th>Időpont</th>
+                    <th>Import (kWh)</th>
+                    <th>Export (kWh)</th>
+                    <th>Nettó (kWh)</th>
+                    <th>Összesen aktív</th>
+                    <th>Visszatáplált</th>
+                </tr>
             </thead>
             <tbody id="data-table"></tbody>
         </table>
@@ -58,7 +69,7 @@
         let chart = null;
 
         async function loadData() {
-            const response = await fetch('/api/history');
+            const response = await fetch('/api/energy');
             allData = await response.json();
             renderTable();
         }
@@ -82,8 +93,6 @@
         function renderChart(filtered) {
             const chartType = document.getElementById('chart-type').value;
             const labels = filtered.map(row => new Date(row.ts).toLocaleTimeString('hu-HU'));
-            const powerData = filtered.map(row => row.total_act_power || 0);
-            const voltageData = filtered.map(row => row.a_voltage || 0);
 
             if (chart) chart.destroy();
 
@@ -93,19 +102,38 @@
                     labels,
                     datasets: [
                         {
-                            label: 'Teljesítmény (W)',
-                            data: powerData,
+                            label: 'Import (kWh)',
+                            data: filtered.map(r => r.import_total_kwh || 0),
                             borderColor: 'rgba(255, 99, 132, 1)',
                             backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            yAxisID: 'yPower',
                             tension: 0.3
                         },
                         {
-                            label: 'Feszültség (V)',
-                            data: voltageData,
+                            label: 'Export (kWh)',
+                            data: filtered.map(r => r.export_total_kwh || 0),
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Nettó (kWh)',
+                            data: filtered.map(r => r.net_total_kwh || 0),
+                            borderColor: 'rgba(255, 206, 86, 1)',
+                            backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Összesen aktív',
+                            data: filtered.map(r => r.total_act || 0),
                             borderColor: 'rgba(54, 162, 235, 1)',
                             backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            yAxisID: 'yVoltage',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Visszatáplált',
+                            data: filtered.map(r => r.total_act_ret || 0),
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
                             tension: 0.3
                         }
                     ]
@@ -114,18 +142,7 @@
                     responsive: true,
                     interaction: { mode: 'index', intersect: false },
                     scales: {
-                        yPower: {
-                            type: 'linear',
-                            position: 'left',
-                            title: { display: true, text: 'Teljesítmény (W)' },
-                            grid: { color: 'rgba(0,0,0,0.05)' }
-                        },
-                        yVoltage: {
-                            type: 'linear',
-                            position: 'right',
-                            title: { display: true, text: 'Feszültség (V)' },
-                            grid: { drawOnChartArea: false }
-                        }
+                        y: { title: { display: true, text: 'Érték' } }
                     }
                 }
             });
@@ -141,8 +158,11 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${new Date(row.ts).toLocaleTimeString('hu-HU')}</td>
-                    <td>${row.total_act_power || 0} W</td>
-                    <td>${row.a_voltage || 0} V</td>
+                    <td>${(row.import_total_kwh || 0).toFixed(3)}</td>
+                    <td>${(row.export_total_kwh || 0).toFixed(3)}</td>
+                    <td>${(row.net_total_kwh || 0).toFixed(3)}</td>
+                    <td>${(row.total_act || 0).toFixed(3)}</td>
+                    <td>${(row.total_act_ret || 0).toFixed(3)}</td>
                 `;
                 tbody.appendChild(tr);
             });

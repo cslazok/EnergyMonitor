@@ -36,3 +36,15 @@ module Db =
               export_power: float option }
 
         let shelly_3em_live = table<shelly_3em_live>
+
+        type shelly_3em_energy =
+            { id: int64
+              ts: System.DateTime
+              device_id: int option
+              total_act: float option
+              total_act_ret: float option
+              import_total_kwh: float option
+              export_total_kwh: float option
+              net_total_kwh: float option }
+
+        let shelly_3em_energy = table<shelly_3em_energy>

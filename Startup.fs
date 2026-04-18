@@ -1,14 +1,13 @@
+module EnergyMonitor.Startup
+
 open System
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Http
-open Microsoft.Extensions.DependencyInjection
-open EnergyMonitor
 
 [<EntryPoint>]
 let main args =
     let builder = WebApplication.CreateBuilder(args)
-    // builder.Services.AddControllers() |> ignore // Ez opcionális, ha csak MapGet van
     
     let app = builder.Build()
     
@@ -19,6 +18,15 @@ let main args =
         task {
             try
                 let! data = Database.getShellyDataLastHour()
+                return Results.Ok(data)
+            with ex ->
+                return Results.Problem(ex.Message)
+        })) |> ignore
+
+    app.MapGet("/api/energy", new Func<Task<IResult>>(fun () ->
+        task {
+            try
+                let! data = Database.getEnergyDataLastHour()
                 return Results.Ok(data)
             with ex ->
                 return Results.Problem(ex.Message)
