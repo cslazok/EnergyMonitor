@@ -65,3 +65,4 @@ C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashb.9E9B145E.Up2Date
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.dll
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.pdb
 C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\ha-dashboard.genruntimeconfig.cache
+C:\Users\lazok\ha-dashboard\obj\Debug\net10.0\compressed\bqnvwfojz5-{0}-b1wz41xvuf-b1wz41xvuf.gz
