@@ -1,101 +1,121 @@
-# Live 3-Phase Energy Dashboard (F# WebSharper Project)
+Live 3-Phase Energy Dashboard (F# WebSharper Project)
 
 Course: Introduction to Functional Programming in F#
-University of Dunaújváros
+University: University of Dunaújváros
 Instructor: Adam Granicz
 
+Project Description
 
-## Project description
+This project is a high-performance real-time energy monitoring dashboard developed in F# using the WebSharper framework. The application visualizes electrical measurements from a remote data server and provides an interactive interface for monitoring three-phase power metrics.
 
-This project is a high-performance energy monitoring dashboard developed in F# using the WebSharper framework. The application provides real-time visualization of electrical data, bridging the gap between raw IoT telemetry and actionable insights.
-The system operates in a distributed environment:
-Central Data Server: A high-capacity physical server hosting a PostgreSQL database. This server acts as the central data hub, continuously collecting and archiving 3-phase energy metrics.
-Development & Hosting Node: A Lenovo ThinkCentre M710q workstation running Linux, used for development, F# coding, and serving the web interface.
+The system operates in a distributed architecture:
 
-## Motivation & Architecture
+Central Data Server
+A dedicated physical server running PostgreSQL, responsible for collecting and storing high-frequency three-phase electrical measurements.
+Development & Visualization Node
+A Lenovo ThinkCentre M710q workstation running Linux, used for development and for hosting the WebSharper-based web interface.
 
-The core motivation was to build a completely independent, custom-built monitoring system instead of relying on pre-packaged smart-home platforms. This standalone approach allows for maximum control over data processing and UI performance.
+This separation ensures responsive visualization while heavy data processing remains isolated on the backend server.
 
-By separating the data collection (Backend Server) from the visualization (Web App), the system remains responsive even during heavy data processing. The development workflow was strictly Linux-based (on the Lenovo M710q), leveraging the cutting-edge .NET 10 ecosystem.
+Motivation and Architecture
 
-The architecture demonstrates a "Decoupled Design," where the lightweight frontend node offloads heavy data storage and complex queries to a dedicated backend server, ensuring high-frequency updates without latency.
+The goal of the project was to build a fully independent monitoring solution instead of relying on monolithic smart-home platforms such as Home Assistant.
 
-## Features
+This approach provides:
 
-Standalone Solution: No dependence on Home Assistant or other monolithic smart-home platforms.
+full control over data processing
+flexible database integration
+improved performance
+customizable visualization logic
 
-Decoupled Architecture: Remote database integration allows the application to run on a development workstation while accessing a powerful central server.
+The architecture follows a decoupled design pattern, where:
 
-3-Phase Power Monitoring:
+the backend server handles storage and queries
+the frontend application handles visualization and user interaction
 
-Real-time Active, Apparent, and Reactive power tracking.
+This makes the system scalable and responsive even under continuous high-frequency measurements.
 
-Detailed per-phase (L1, L2, L3) analysis: Voltage, Current, and Power Factor.
+Features
+Standalone Monitoring Solution
 
-Modern Tech Stack: Developed using the latest .NET 10 features and F# functional paradigms.
+The application operates independently from existing smart-home ecosystems.
 
-Secure Configuration: Sensitive connection strings are managed via .env files.
+Decoupled Architecture
 
-Reactive UI: Automatic 5-second data polling using WebSharper's reactive components.
+The visualization layer runs separately from the database server, ensuring stable performance.
 
+3-Phase Power Monitoring
 
-## Technologies used
+Supports real-time visualization of:
 
-The project was implemented using the following technologies:
+Active power
+Apparent power
+Reactive power
+Voltage (L1, L2, L3)
+Current (L1, L2, L3)
+Power factor (L1, L2, L3)
+Reactive User Interface
 
-The project was implemented using the following technologies:
+The dashboard automatically refreshes measurement data every 5 seconds using WebSharper reactive components.
 
-    F# / WebSharper (Functional full-stack development)
+Secure Configuration
 
-    .NET 10 (Latest runtime and SDK)
+Sensitive configuration values (database connection parameters) are stored in a local .env file and are not committed to version control.
 
-    PostgreSQL & Npgsql (Time-series data storage and access)
+Technologies Used
 
-    ASP.NET Core (Web hosting)
+The project was implemented using:
 
-    Node-RED (Data orchestration)
+F#
+WebSharper
+.NET 10
+ASP.NET Core
+PostgreSQL
+Npgsql
+Node-RED
+JSON HTTP API
+Git / GitHub
+GitHub Pages (demo deployment)
+Project Structure
 
-    JSON HTTP API (Data exchange)
+Database.fs
 
-    Git / GitHub / GitHub Pages (Version control and demo hosting)
+Contains database access logic and maps PostgreSQL query results into functional F# record types.
 
-## Project Structure
+Client.fs
 
-    Database.fs: Contains the F# logic for connecting to the remote physical server and mapping SQL results to functional records.
+Implements reactive frontend logic and periodic data polling.
 
-    Client.fs: The reactive frontend logic, handling live UI updates and data polling.
+Startup.fs
 
-    Startup.fs: Configures the ASP.NET Core hosting environment.
+Configures the ASP.NET Core hosting environment.
 
-    .env: Local configuration file for the remote server's IP and authentication.
+.env
 
+Stores local configuration values such as:
 
-## Live demo link
+database host
+username
+password
+database name
+Live Demo
 
 The project is available online via GitHub Pages:
 
 https://cslazok.github.io/ha-dashboard/
 
-Since GitHub Pages supports only static websites, the live demo version runs in demo mode using sample measurement data stored in a JSON file.
+Since GitHub Pages supports only static hosting, the demo version uses sample measurement data stored in a JSON file instead of a live database connection.
 
+Future Improvements
 
-## Screenshot
+Possible extensions of the project include:
 
-![Dashboard screenshot](docs/screenshot.png)
-
-
-## Future improvements
-
-Possible future extensions of the project include:
-
-- historical energy charts
-- mobile layout optimization
-- alert system for abnormal consumption
-- database integration for long-term storage
-- Home Assistant integration support
-
-
-## Author
+historical energy charts
+mobile-optimized layout
+abnormal consumption alert system
+extended long-term storage integration
+optional Home Assistant interoperability
+Author
 
 Dániel Csaba Lázok
 University of Dunaújváros
