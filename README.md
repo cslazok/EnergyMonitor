@@ -117,3 +117,6 @@ Author
 Dániel Csaba Lázok
 University of Dunaújváros
 Course: Introduction to Functional Programming in F#
+
+Demo:
+https://cslazok.github.io/EnergyMonitor/energy.html

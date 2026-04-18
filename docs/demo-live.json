@@ -1,0 +1,22 @@
+[
+  { "ts": "2026-04-18T16:00:00Z", "total_act_power": 1842.4, "a_voltage": 229.6, "total_current": 8.12 },
+  { "ts": "2026-04-18T16:03:00Z", "total_act_power": 1918.7, "a_voltage": 229.8, "total_current": 8.44 },
+  { "ts": "2026-04-18T16:06:00Z", "total_act_power": 1765.3, "a_voltage": 230.1, "total_current": 7.91 },
+  { "ts": "2026-04-18T16:09:00Z", "total_act_power": 2054.8, "a_voltage": 229.4, "total_current": 8.97 },
+  { "ts": "2026-04-18T16:12:00Z", "total_act_power": 2231.5, "a_voltage": 229.9, "total_current": 9.36 },
+  { "ts": "2026-04-18T16:15:00Z", "total_act_power": 2144.2, "a_voltage": 230.3, "total_current": 9.08 },
+  { "ts": "2026-04-18T16:18:00Z", "total_act_power": 1987.6, "a_voltage": 229.7, "total_current": 8.63 },
+  { "ts": "2026-04-18T16:21:00Z", "total_act_power": 1724.9, "a_voltage": 230.0, "total_current": 7.58 },
+  { "ts": "2026-04-18T16:24:00Z", "total_act_power": 1658.1, "a_voltage": 230.2, "total_current": 7.31 },
+  { "ts": "2026-04-18T16:27:00Z", "total_act_power": 1876.4, "a_voltage": 229.5, "total_current": 8.04 },
+  { "ts": "2026-04-18T16:30:00Z", "total_act_power": 2364.7, "a_voltage": 229.8, "total_current": 9.85 },
+  { "ts": "2026-04-18T16:33:00Z", "total_act_power": 2488.2, "a_voltage": 230.4, "total_current": 10.11 },
+  { "ts": "2026-04-18T16:36:00Z", "total_act_power": 2219.6, "a_voltage": 230.0, "total_current": 9.42 },
+  { "ts": "2026-04-18T16:39:00Z", "total_act_power": 2098.3, "a_voltage": 229.6, "total_current": 8.98 },
+  { "ts": "2026-04-18T16:42:00Z", "total_act_power": 1944.5, "a_voltage": 229.9, "total_current": 8.41 },
+  { "ts": "2026-04-18T16:45:00Z", "total_act_power": 1822.0, "a_voltage": 230.1, "total_current": 7.96 },
+  { "ts": "2026-04-18T16:48:00Z", "total_act_power": 1697.8, "a_voltage": 230.5, "total_current": 7.42 },
+  { "ts": "2026-04-18T16:51:00Z", "total_act_power": 1584.6, "a_voltage": 229.8, "total_current": 6.94 },
+  { "ts": "2026-04-18T16:54:00Z", "total_act_power": 1741.9, "a_voltage": 229.7, "total_current": 7.55 },
+  { "ts": "2026-04-18T16:57:00Z", "total_act_power": 2016.1, "a_voltage": 230.2, "total_current": 8.77 }
+]
