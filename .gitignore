@@ -1,5 +1,7 @@
+.env
 bin/
 obj/
-.env
-*.user
-.fake
+node_modules/
+*.dll
+*.pdb
+.vs/
