@@ -1,7 +1,9 @@
-.env
 bin/
 obj/
+.vs/
 node_modules/
+*.log
+.env
 *.dll
 *.pdb
-.vs/
+wwwroot/Scripts/WebSharper*
