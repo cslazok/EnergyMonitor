@@ -11,11 +11,9 @@ This project is a high-performance real-time energy monitoring dashboard develop
 The system operates in a distributed architecture:
 
 Central Data Server
-A dedicated physical server running PostgreSQL, responsible for collecting and storing high-frequency three-phase electrical measurements.
-Development & Visualization Node
-A Lenovo ThinkCentre M710q workstation running Linux, used for development and for hosting the WebSharper-based web interface.
+Central Production Server: A high-capacity physical server that hosts both the PostgreSQL database and the live WebSharper application. It is responsible for data collection, long-term storage, and serving the web interface to users.
 
-This separation ensures responsive visualization while heavy data processing remains isolated on the backend server.
+Development Workstation: A Lenovo ThinkCentre M710q running Linux, dedicated strictly to development tasks, such as writing F# code, testing new features, and version control.
 
 Motivation and Architecture
 
