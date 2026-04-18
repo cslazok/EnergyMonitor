@@ -1,0 +1,26 @@
+[
+  {
+    "ts": "2026-04-18T16:00:00Z",
+    "import_total_kwh": 27682.105,
+    "export_total_kwh": 26455.220,
+    "net_total_kwh": 1226.885,
+    "total_act": 7262.371,
+    "total_act_ret": 6271.598
+  },
+  {
+    "ts": "2026-04-18T16:05:00Z",
+    "import_total_kwh": 27682.142,
+    "export_total_kwh": 26455.246,
+    "net_total_kwh": 1226.896,
+    "total_act": 7262.408,
+    "total_act_ret": 6271.624
+  },
+  {
+    "ts": "2026-04-18T16:10:00Z",
+    "import_total_kwh": 27682.176,
+    "export_total_kwh": 26455.281,
+    "net_total_kwh": 1226.895,
+    "total_act": 7262.442,
+    "total_act_ret": 6271.659
+  }
+]
