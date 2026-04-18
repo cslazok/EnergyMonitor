@@ -132,20 +132,8 @@
         <footer>ENERGY MONITOR — SHELLY 3EM — REAL-TIME POWER ANALYTICS</footer>
     </div>
     <script>
-        let allData = [], chart = null;
-        async function loadData() {
-            const btn = document.querySelector('.refresh-btn');
-            btn.classList.add('loading');
-            document.getElementById('status-text').textContent = 'Fetching data...';
-            try {
-                const response = await fetch('/api/history');
-                allData = await response.json();
-                document.getElementById('status-text').textContent = 'Live · 1h window';
-                document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB');
-                renderTable();
-            } catch(e) { document.getElementById('status-text').textContent = 'Connection error'; }
-            btn.classList.remove('loading');
-        }
+
+        
         function getFiltered() {
             const from = document.getElementById('filter-from').value;
             const to = document.getElementById('filter-to').value;
