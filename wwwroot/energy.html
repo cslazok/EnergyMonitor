@@ -496,18 +496,9 @@
         };
 
         async function loadData() {
-    const btn = document.querySelector('.refresh-btn');
-    btn.classList.add('loading');
-    try {
-        const response = await fetch('./demo-energy.json');
-        allData = await response.json();
-        document.getElementById('status-text').textContent = 'Demo Mode (Local Data)';
-        renderTable();
-    } catch(e) {
-        document.getElementById('status-text').textContent = 'Error loading demo data';
-    }
-    btn.classList.remove('loading');
-}
+            const btn = document.querySelector('.refresh-btn');
+            btn.classList.add('loading');
+            document.getElementById('status-text').textContent = 'Fetching data...';
             try {
                 const response = await fetch('/api/energy');
                 allData = await response.json();
@@ -519,7 +510,7 @@
                 document.getElementById('status-text').textContent = 'Connection error';
             }
             btn.classList.remove('loading');
-        
+        }
 
         function getFiltered() {
             const from = document.getElementById('filter-from').value;
