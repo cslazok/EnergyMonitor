@@ -9,8 +9,8 @@ open DotNetEnv
 
 module Database =
   
-   if System.IO.File.Exists(".env") then
-    Env.Load() |> ignore
+    if System.IO.File.Exists(".env") then
+     DotNetEnv.Env.Load() |> ignore
     
     let private connString = DotNetEnv.Env.GetString("DB_CONNECTION")
     let getLatestShellyData () =
