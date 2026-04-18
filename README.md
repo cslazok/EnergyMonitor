@@ -3,3 +3,5 @@ This project was started as a way to learn F#. I would like to monitor my own ho
 Demo:
 https://cslazok.github.io/EnergyMonitor/energy.html
 
+## Screenshots
+![Live Data](https://raw.githubusercontent.com/cslazok/EnergyMonitor/main/docs/screenshot.png)
