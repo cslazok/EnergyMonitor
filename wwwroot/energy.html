@@ -495,32 +495,22 @@
             ret:    { border: '#c46bff', bg: 'rgba(196,107,255,0.15)' },
         };
 
-    async function loadData() {
-    const btn = document.querySelector('.refresh-btn');
-    btn.classList.add('loading');
-    document.getElementById('status-text').textContent = 'Fetching demo data...';
-    try {
-        let response;
-
-    try {
-    response = await fetch('/api/energy');
-    if (!response.ok) throw new Error();
-    } catch {
-    response = await fetch('./demo-energy.json');
+        async function loadData() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.classList.add('loading');
+            document.getElementById('status-text').textContent = 'Fetching data...';
+            try {
+                const response = await fetch('/api/energy');
+                allData = await response.json();
+                document.getElementById('status-text').textContent = 'Live · 1h window';
+                document.getElementById('last-updated').textContent = 
+                    'Updated ' + new Date().toLocaleTimeString('en-GB');
+                renderTable();
+            } catch(e) {
+                document.getElementById('status-text').textContent = 'Connection error';
+            }
+            btn.classList.remove('loading');
         }
-        if (!response.ok) throw new Error('Failed to load demo data');
-        allData = await response.json();
-        document.getElementById('status-text').textContent = 'Demo mode · local JSON';
-        document.getElementById('last-updated').textContent =
-            'Updated ' + new Date().toLocaleTimeString('en-GB');
-        renderTable();
-    } catch (e) {
-        document.getElementById('status-text').textContent = 'Demo data error';
-        document.getElementById('data-table').innerHTML =
-            '<tr><td colspan="6" class="empty-state">Could not load demo-energy.json</td></tr>';
-    }
-    btn.classList.remove('loading');
-}
 
         function getFiltered() {
             const from = document.getElementById('filter-from').value;
