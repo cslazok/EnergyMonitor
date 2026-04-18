@@ -135,8 +135,17 @@
         let allData = [], chart = null;
         async function loadData() {
             const btn = document.querySelector('.refresh-btn');
-            btn.classList.add('loading');
-            document.getElementById('status-text').textContent = 'Fetching data...';
+     btn.classList.add('loading');
+        try {
+        const response = await fetch('./demo-live.json');
+        allData = await response.json();
+        document.getElementById('status-text').textContent = 'Demo Mode (Local Data)';
+        renderTable();
+    } catch(e) {
+        document.getElementById('status-text').textContent = 'Error loading demo data';
+    }
+    btn.classList.remove('loading');
+                }
             try {
                 const response = await fetch('/api/history');
                 allData = await response.json();
@@ -145,7 +154,7 @@
                 renderTable();
             } catch(e) { document.getElementById('status-text').textContent = 'Connection error'; }
             btn.classList.remove('loading');
-        }
+        
         function getFiltered() {
             const from = document.getElementById('filter-from').value;
             const to = document.getElementById('filter-to').value;
