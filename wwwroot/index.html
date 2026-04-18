@@ -1,205 +1,175 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Energy Monitor — Live Data</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0a0a0f;
-            --surface: #111118;
-            --surface2: #1a1a24;
-            --border: #2a2a3a;
-            --accent: #00e5ff;
-            --accent2: #ff6b35;
-            --text: #e8e8f0;
-            --muted: #6b6b80;
-            --power: #ff6b6b;
-            --voltage: #6bb8ff;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
-        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 80% 40% at 10% 0%, rgba(0,229,255,0.04) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 90% 100%, rgba(255,107,53,0.04) 0%, transparent 60%); pointer-events: none; z-index: 0; }
-        .grid-bg { position: fixed; inset: 0; background-image: linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
-        header { padding: 2rem 0 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-        .header-left { display: flex; align-items: baseline; gap: 1rem; }
-        .logo-tag { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--accent); letter-spacing: 0.2em; text-transform: uppercase; border: 1px solid var(--accent); padding: 0.2rem 0.5rem; opacity: 0.8; }
-        h1 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -0.02em; }
-        h1 span { color: var(--accent); }
-        .nav-btn { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 0.5rem 1rem; letter-spacing: 0.05em; transition: all 0.2s; white-space: nowrap; }
-        .nav-btn:hover { color: var(--accent); border-color: var(--accent); }
-        .status-bar { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 0; margin-bottom: 1.5rem; font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; border-bottom: 1px solid var(--border); }
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #7fff6b; box-shadow: 0 0 8px #7fff6b; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; margin: 2rem 0; border: 1px solid var(--border); background: var(--border); animation: fadeUp 0.5s ease both; }
-        .stat-card { background: var(--surface); padding: 1.2rem 1.5rem; position: relative; overflow: hidden; }
-        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
-        .stat-card.power::before { background: var(--power); }
-        .stat-card.voltage::before { background: var(--voltage); }
-        .stat-card.current::before { background: var(--accent); }
-        .stat-card.records::before { background: var(--accent2); }
-        .stat-label { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
-        .stat-value { font-family: 'Space Mono', monospace; font-size: 1.3rem; font-weight: 700; }
-        .stat-card.power .stat-value { color: var(--power); }
-        .stat-card.voltage .stat-value { color: var(--voltage); }
-        .stat-card.current .stat-value { color: var(--accent); }
-        .stat-card.records .stat-value { color: var(--text); }
-        .controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem; padding: 1.5rem; background: var(--surface); border: 1px solid var(--border); animation: fadeUp 0.5s 0.1s ease both; }
-        .control-group { display: flex; flex-direction: column; gap: 0.4rem; }
-        .control-group label { font-family: 'Space Mono', monospace; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
-        .control-group input, .control-group select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.75rem; font-family: 'Space Mono', monospace; font-size: 0.8rem; outline: none; transition: border-color 0.2s; appearance: none; min-width: 100px; }
-        .control-group input:focus, .control-group select:focus { border-color: var(--accent); }
-        .control-group select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6b80'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2rem; }
-        .refresh-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 0.5rem 1.5rem; font-family: 'Space Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
-        .refresh-btn:hover { background: var(--accent); color: var(--bg); }
-        .refresh-btn.loading { opacity: 0.5; cursor: wait; }
-        .chart-wrap { background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; animation: fadeUp 0.5s 0.2s ease both; }
-        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .chart-title { font-family: 'Space Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
-        .record-count { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--accent); }
-        .table-wrap { background: var(--surface); border: 1px solid var(--border); overflow: auto; animation: fadeUp 0.5s 0.3s ease both; }
-        table { width: 100%; border-collapse: collapse; font-family: 'Space Mono', monospace; font-size: 0.75rem; }
-        thead tr { border-bottom: 1px solid var(--border); }
-        th { padding: 0.85rem 1rem; text-align: left; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
-        td { padding: 0.65rem 1rem; border-bottom: 1px solid rgba(42,42,58,0.5); white-space: nowrap; transition: background 0.15s; }
-        tbody tr:hover td { background: var(--surface2); }
-        tbody tr:last-child td { border-bottom: none; }
-        .val-power { color: var(--power); }
-        .val-voltage { color: var(--voltage); }
-        .val-time { color: var(--muted); }
-        .empty-state { text-align: center; padding: 3rem; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.8rem; letter-spacing: 0.1em; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        footer { padding: 2rem 0; text-align: center; font-family: 'Space Mono', monospace; font-size: 0.6rem; color: var(--border); letter-spacing: 0.1em; border-top: 1px solid var(--border); margin-top: 2rem; }
-    </style>
-</head>
-<body>
-    <div class="grid-bg"></div>
-    <div class="container">
-        <header>
-            <div class="header-left">
-                <div class="logo-tag">⚡ EnergyMon</div>
-                <h1>Live <span>Data</span></h1>
-            </div>
-            <a href="energy.html" class="nav-btn">Power Summary →</a>
-        </header>
-        <div class="status-bar">
-            <div class="status-dot"></div>
-            <span id="status-text">Connecting...</span>
-            <span>|</span>
-            <span id="last-updated">—</span>
-        </div>
-        <div class="stats-row">
-            <div class="stat-card power"><div class="stat-label">Total Power</div><div class="stat-value" id="stat-power">—</div></div>
-            <div class="stat-card voltage"><div class="stat-label">Voltage A</div><div class="stat-value" id="stat-voltage">—</div></div>
-            <div class="stat-card current"><div class="stat-label">Total Current</div><div class="stat-value" id="stat-current">—</div></div>
-            <div class="stat-card records"><div class="stat-label">Records (1h)</div><div class="stat-value" id="stat-records">—</div></div>
-        </div>
-        <div class="controls">
-            <div class="control-group"><label>From</label><input type="time" id="filter-from"></div>
-            <div class="control-group"><label>To</label><input type="time" id="filter-to"></div>
-            <div class="control-group"><label>Show</label>
-                <select id="filter-limit">
-                    <option value="10">10 records</option>
-                    <option value="20" selected>20 records</option>
-                    <option value="50">50 records</option>
-                    <option value="0">All</option>
-                </select>
-            </div>
-            <div class="control-group"><label>Chart Type</label>
-                <select id="chart-type">
-                    <option value="line">Line</option>
-                    <option value="bar">Bar</option>
-                </select>
-            </div>
-            <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
-        </div>
-        <div class="chart-wrap">
-            <div class="chart-header">
-                <span class="chart-title">Power & Voltage — Last Hour</span>
-                <span class="record-count" id="record-count">0 records</span>
-            </div>
-            <canvas id="chart" height="80"></canvas>
-        </div>
-        <div class="table-wrap">
-            <table>
-                <thead><tr><th>Timestamp</th><th>Total Power (W)</th><th>Voltage A (V)</th></tr></thead>
-                <tbody id="data-table"><tr><td colspan="3" class="empty-state">Loading data...</td></tr></tbody>
-            </table>
-        </div>
-        <footer>ENERGY MONITOR — SHELLY 3EM — REAL-TIME POWER ANALYTICS</footer>
-    </div>
-    <script>
+<script>
+    let allData = [], chart = null;
 
-        
-        function getFiltered() {
-            const from = document.getElementById('filter-from').value;
-            const to = document.getElementById('filter-to').value;
-            const limit = parseInt(document.getElementById('filter-limit').value);
-            let filtered = [...allData].reverse().filter(row => {
-                const t = new Date(row.ts);
-                const hhmm = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
-                if (from && hhmm < from) return false;
-                if (to && hhmm > to) return false;
-                return true;
-            });
-            if (limit > 0) filtered = filtered.slice(0, limit);
-            return filtered;
+    async function loadData() {
+        const btn = document.querySelector('.refresh-btn');
+        btn.classList.add('loading');
+        document.getElementById('status-text').textContent = 'Fetching demo data...';
+
+        try {
+            const response = await fetch('./demo-live.json');
+            allData = await response.json();
+
+            document.getElementById('status-text').textContent = 'Demo mode · GitHub Pages dataset';
+            document.getElementById('last-updated').textContent =
+                'Updated ' + new Date().toLocaleTimeString('en-GB');
+
+            renderTable();
+        } catch (e) {
+            document.getElementById('status-text').textContent = 'Could not load demo-live.json';
+            document.getElementById('data-table').innerHTML =
+                '<tr><td colspan="3" class="empty-state">No demo data found</td></tr>';
         }
-        function updateStats(filtered) {
-            document.getElementById('stat-records').textContent = allData.length;
-            const last = filtered[filtered.length - 1];
-            if (!last) return;
-            document.getElementById('stat-power').textContent = (last.total_act_power || 0).toFixed(1) + ' W';
-            document.getElementById('stat-voltage').textContent = (last.a_voltage || 0).toFixed(1) + ' V';
-            document.getElementById('stat-current').textContent = (last.total_current || 0).toFixed(2) + ' A';
-        }
-        function renderChart(filtered) {
-            const chartType = document.getElementById('chart-type').value;
-            const labels = filtered.map(r => new Date(r.ts).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'}));
-            if (chart) chart.destroy();
-            Chart.defaults.color = '#6b6b80';
-            Chart.defaults.borderColor = 'rgba(42,42,58,0.6)';
-            chart = new Chart(document.getElementById('chart'), {
-                type: chartType,
-                data: { labels, datasets: [
-                    { label: 'Total Power (W)', data: filtered.map(r => r.total_act_power || 0), borderColor: '#ff6b6b', backgroundColor: 'rgba(255,107,107,0.15)', tension: 0.4, pointRadius: 0, borderWidth: 2, yAxisID: 'yPower' },
-                    { label: 'Voltage A (V)', data: filtered.map(r => r.a_voltage || 0), borderColor: '#6bb8ff', backgroundColor: 'rgba(107,184,255,0.15)', tension: 0.4, pointRadius: 0, borderWidth: 2, yAxisID: 'yVoltage' }
-                ]},
-                options: {
-                    responsive: true, animation: { duration: 400 },
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { labels: { font: { family: 'Space Mono', size: 10 }, boxWidth: 12, padding: 16 } } },
-                    scales: {
-                        x: { ticks: { font: { family: 'Space Mono', size: 9 }, maxTicksLimit: 8 }, grid: { color: 'rgba(42,42,58,0.4)' } },
-                        yPower: { position: 'left', ticks: { font: { family: 'Space Mono', size: 9 } }, grid: { color: 'rgba(42,42,58,0.4)' }, title: { display: true, text: 'W', font: { family: 'Space Mono', size: 9 }, color: '#6b6b80' } },
-                        yVoltage: { position: 'right', ticks: { font: { family: 'Space Mono', size: 9 } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'V', font: { family: 'Space Mono', size: 9 }, color: '#6b6b80' } }
+
+        btn.classList.remove('loading');
+    }
+
+    function getFiltered() {
+        const from = document.getElementById('filter-from').value;
+        const to = document.getElementById('filter-to').value;
+        const limit = parseInt(document.getElementById('filter-limit').value);
+
+        let filtered = [...allData].reverse().filter(row => {
+            const t = new Date(row.ts);
+            const hhmm = t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0');
+            if (from && hhmm < from) return false;
+            if (to && hhmm > to) return false;
+            return true;
+        });
+
+        if (limit > 0) filtered = filtered.slice(0, limit);
+        return filtered;
+    }
+
+    function updateStats(filtered) {
+        document.getElementById('stat-records').textContent = allData.length;
+        const last = filtered[filtered.length - 1];
+        if (!last) return;
+
+        document.getElementById('stat-power').textContent = (last.total_act_power || 0).toFixed(1) + ' W';
+        document.getElementById('stat-voltage').textContent = (last.a_voltage || 0).toFixed(1) + ' V';
+        document.getElementById('stat-current').textContent = (last.total_current || 0).toFixed(2) + ' A';
+    }
+
+    function renderChart(filtered) {
+        const chartType = document.getElementById('chart-type').value;
+        const labels = filtered.map(r =>
+            new Date(r.ts).toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            })
+        );
+
+        if (chart) chart.destroy();
+
+        Chart.defaults.color = '#6b6b80';
+        Chart.defaults.borderColor = 'rgba(42,42,58,0.6)';
+
+        chart = new Chart(document.getElementById('chart'), {
+            type: chartType,
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Total Power (W)',
+                        data: filtered.map(r => r.total_act_power || 0),
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255,107,107,0.15)',
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2,
+                        yAxisID: 'yPower'
+                    },
+                    {
+                        label: 'Voltage A (V)',
+                        data: filtered.map(r => r.a_voltage || 0),
+                        borderColor: '#6bb8ff',
+                        backgroundColor: 'rgba(107,184,255,0.15)',
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2,
+                        yAxisID: 'yVoltage'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                animation: { duration: 400 },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: { family: 'Space Mono', size: 10 },
+                            boxWidth: 12,
+                            padding: 16
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            font: { family: 'Space Mono', size: 9 },
+                            maxTicksLimit: 8
+                        },
+                        grid: { color: 'rgba(42,42,58,0.4)' }
+                    },
+                    yPower: {
+                        position: 'left',
+                        ticks: { font: { family: 'Space Mono', size: 9 } },
+                        grid: { color: 'rgba(42,42,58,0.4)' },
+                        title: {
+                            display: true,
+                            text: 'W',
+                            font: { family: 'Space Mono', size: 9 },
+                            color: '#6b6b80'
+                        }
+                    },
+                    yVoltage: {
+                        position: 'right',
+                        ticks: { font: { family: 'Space Mono', size: 9 } },
+                        grid: { drawOnChartArea: false },
+                        title: {
+                            display: true,
+                            text: 'V',
+                            font: { family: 'Space Mono', size: 9 },
+                            color: '#6b6b80'
+                        }
                     }
                 }
-            });
+            }
+        });
+    }
+
+    function renderTable() {
+        const filtered = getFiltered();
+        document.getElementById('record-count').textContent = filtered.length + ' records';
+        updateStats(filtered);
+        renderChart(filtered);
+
+        const tbody = document.getElementById('data-table');
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No data for selected range</td></tr>';
+            return;
         }
-        function renderTable() {
-            const filtered = getFiltered();
-            document.getElementById('record-count').textContent = filtered.length + ' records';
-            updateStats(filtered);
-            renderChart(filtered);
-            const tbody = document.getElementById('data-table');
-            if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No data for selected range</td></tr>'; return; }
-            tbody.innerHTML = '';
-            filtered.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="val-time">${new Date(row.ts).toLocaleTimeString('en-GB')}</td><td class="val-power">${(row.total_act_power || 0).toFixed(3)} W</td><td class="val-voltage">${(row.a_voltage || 0).toFixed(1)} V</td>`;
-                tbody.appendChild(tr);
-            });
-        }
-        document.getElementById('filter-from').addEventListener('change', renderTable);
-        document.getElementById('filter-to').addEventListener('change', renderTable);
-        document.getElementById('filter-limit').addEventListener('change', renderTable);
-        document.getElementById('chart-type').addEventListener('change', renderTable);
-        loadData();
-        setInterval(loadData, 30000);
-    </script>
-</body>
-</html>
+
+        tbody.innerHTML = '';
+        filtered.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="val-time">${new Date(row.ts).toLocaleTimeString('en-GB')}</td>
+                <td class="val-power">${(row.total_act_power || 0).toFixed(3)} W</td>
+                <td class="val-voltage">${(row.a_voltage || 0).toFixed(1)} V</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById('filter-from').addEventListener('change', renderTable);
+    document.getElementById('filter-to').addEventListener('change', renderTable);
+    document.getElementById('filter-limit').addEventListener('change', renderTable);
+    document.getElementById('chart-type').addEventListener('change', renderTable);
+
+    loadData();
+    setInterval(loadData, 30000);
+</script>
