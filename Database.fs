@@ -9,6 +9,7 @@ open DotNetEnv
 
 module Database =
   
+   if System.IO.File.Exists(".env") then
     Env.Load() |> ignore
     
     let private connString = DotNetEnv.Env.GetString("DB_CONNECTION")
