@@ -7,80 +7,67 @@ Instructor: Adam Granicz
 
 ## Project description
 
-This project is a web-based live energy monitoring dashboard written in F# using WebSharper.
+This project is a high-performance energy monitoring dashboard developed in F# using the WebSharper framework. The application provides real-time visualization of electrical data, bridging the gap between raw IoT telemetry and actionable insights.
+The system operates in a distributed environment:
+Central Data Server: A high-capacity physical server hosting a PostgreSQL database. This server acts as the central data hub, continuously collecting and archiving 3-phase energy metrics.
+Development & Hosting Node: A Lenovo ThinkCentre M710q workstation running Linux, used for development, F# coding, and serving the web interface.
 
-The application displays real-time electrical measurements from a three-phase energy meter. Data is provided by Node-RED through a JSON HTTP endpoint and visualized in a browser-based dashboard interface.
+## Motivation & Architecture
 
-The goal of the project was to create a practical smart-home monitoring interface using functional programming techniques in F#.
+The core motivation was to build a completely independent, custom-built monitoring system instead of relying on pre-packaged smart-home platforms. This standalone approach allows for maximum control over data processing and UI performance.
 
+By separating the data collection (Backend Server) from the visualization (Web App), the system remains responsive even during heavy data processing. The development workflow was strictly Linux-based (on the Lenovo M710q), leveraging the cutting-edge .NET 10 ecosystem.
 
-## Motivation
-
-I created this dashboard to monitor the real-time electrical energy consumption of my home.
-
-Although Home Assistant already provides visualization tools, I wanted to build a lightweight custom monitoring interface using functional programming in F#. The application reads processed energy data from Node-RED and displays it in a simplified dashboard optimized for fast overview and clarity.
-
-This solution demonstrates how F# and WebSharper can be used to build real-world smart-home monitoring applications.
-
+The architecture demonstrates a "Decoupled Design," where the lightweight frontend node offloads heavy data storage and complex queries to a dedicated backend server, ensuring high-frequency updates without latency.
 
 ## Features
 
-The dashboard provides the following functionality:
+Standalone Solution: No dependence on Home Assistant or other monolithic smart-home platforms.
 
-- Live total active power measurement
-- Total current measurement
-- Total apparent power measurement
-- Per-phase power monitoring (L1, L2, L3)
-- Per-phase voltage monitoring
-- Per-phase current monitoring
-- Per-phase power factor monitoring
-- Automatic refresh every 5 seconds
-- Demo mode support for GitHub Pages deployment
+Decoupled Architecture: Remote database integration allows the application to run on a development workstation while accessing a powerful central server.
+
+3-Phase Power Monitoring:
+
+Real-time Active, Apparent, and Reactive power tracking.
+
+Detailed per-phase (L1, L2, L3) analysis: Voltage, Current, and Power Factor.
+
+Modern Tech Stack: Developed using the latest .NET 10 features and F# functional paradigms.
+
+Secure Configuration: Sensitive connection strings are managed via .env files.
+
+Reactive UI: Automatic 5-second data polling using WebSharper's reactive components.
 
 
 ## Technologies used
 
 The project was implemented using the following technologies:
 
-- F#
-- WebSharper
-- ASP.NET Core
-- Node-RED
-- JSON HTTP API
-- Git
-- GitHub
-- GitHub Pages
+The project was implemented using the following technologies:
 
+    F# / WebSharper (Functional full-stack development)
 
-## How to run the project locally
+    .NET 10 (Latest runtime and SDK)
 
-Clone the repository:
+    PostgreSQL & Npgsql (Time-series data storage and access)
 
-git clone https://github.com/cslazok/ha-dashboard.git
+    ASP.NET Core (Web hosting)
 
-Navigate into the project folder:
+    Node-RED (Data orchestration)
 
-cd ha-dashboard
+    JSON HTTP API (Data exchange)
 
-Build the application:
+    Git / GitHub / GitHub Pages (Version control and demo hosting)
 
-dotnet build
+## Project Structure
 
-Run the application:
+    Database.fs: Contains the F# logic for connecting to the remote physical server and mapping SQL results to functional records.
 
-dotnet run
+    Client.fs: The reactive frontend logic, handling live UI updates and data polling.
 
-Open the application in your browser:
+    Startup.fs: Configures the ASP.NET Core hosting environment.
 
-http://localhost:5000
-
-Make sure the Node-RED endpoint is available:
-
-http://192.168.0.63:1880/energy/live
-
-If necessary, the endpoint URL can be modified inside:
-
-Client.fs
+    .env: Local configuration file for the remote server's IP and authentication.
 
 
 ## Live demo link
@@ -95,23 +82,6 @@ Since GitHub Pages supports only static websites, the live demo version runs in 
 ## Screenshot
 
 ![Dashboard screenshot](docs/screenshot.png)
-
-
-## Project structure overview
-
-Main important files:
-
-Client.fs
-
-Contains dashboard UI logic and live data refresh.
-
-Startup.fs
-
-Configures ASP.NET Core application and API endpoint routing.
-
-wwwroot/demo-energy.json
-
-Provides demo data for GitHub Pages deployment.
 
 
 ## Future improvements
