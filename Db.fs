@@ -1,4 +1,4 @@
-namespace HaDashboard.Db
+namespace EnergyMonitor.Db
 
 open SqlHydra.Query
 

@@ -1,9 +1,9 @@
-namespace HaDashboard
+namespace EnergyMonitor
 
 open Npgsql
 open SqlHydra.Query
-open HaDashboard.Db
-open HaDashboard.Db.Tables
+open EnergyMonitor.Db
+open EnergyMonitor.Db.Tables
 
 open DotNetEnv 
 

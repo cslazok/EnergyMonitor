@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <linker>
-  <assembly fullname="ha-dashboard">
-    <resource name="FSharpSignatureData.ha-dashboard" action="remove"></resource>
-    <resource name="FSharpSignatureCompressedData.ha-dashboard" action="remove"></resource>
-    <resource name="FSharpSignatureDataB.ha-dashboard" action="remove"></resource>
-    <resource name="FSharpSignatureCompressedDataB.ha-dashboard" action="remove"></resource>
-    <resource name="FSharpOptimizationData.ha-dashboard" action="remove"></resource>
-    <resource name="FSharpOptimizationCompressedData.ha-dashboard" action="remove"></resource>
-    <resource name="FSharpOptimizationDataB.ha-dashboard" action="remove"></resource>
-    <resource name="FSharpOptimizationCompressedDataB.ha-dashboard" action="remove"></resource>
-    <resource name="FSharpOptimizationInfo.ha-dashboard" action="remove"></resource>
-    <resource name="FSharpSignatureInfo.ha-dashboard" action="remove"></resource>
+  <assembly fullname="EnergyMonitor">
+    <resource name="FSharpSignatureData.EnergyMonitor" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedData.EnergyMonitor" action="remove"></resource>
+    <resource name="FSharpSignatureDataB.EnergyMonitor" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedDataB.EnergyMonitor" action="remove"></resource>
+    <resource name="FSharpOptimizationData.EnergyMonitor" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedData.EnergyMonitor" action="remove"></resource>
+    <resource name="FSharpOptimizationDataB.EnergyMonitor" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedDataB.EnergyMonitor" action="remove"></resource>
+    <resource name="FSharpOptimizationInfo.EnergyMonitor" action="remove"></resource>
+    <resource name="FSharpSignatureInfo.EnergyMonitor" action="remove"></resource>
   </assembly>
 </linker>
