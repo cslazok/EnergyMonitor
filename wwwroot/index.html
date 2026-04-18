@@ -1,21 +1,39 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <title>HA Dashboard</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <link rel="stylesheet" type="text/css" href="Scripts/ha-dashboard.css" />
-    <link rel="stylesheet" type="text/css" href="style.css" />
-
-    <style>
-        [ws-template], [ws-children-template] { display: none; }
-    </style>
-
-    <script type="text/javascript" src="Scripts/ha-dashboard.head.js"></script>
+    <title>Energy Monitor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body>
-    <div id="main"></div>
-    <script type="module" src="Scripts/ha-dashboard.min.js"></script>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1>Energy Monitor History</h1>
+        <button onclick="loadData()" class="btn btn-primary mb-3">Adatok frissítése</button>
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr><th>Időpont</th><th>Teljesítmény (W)</th><th>Feszültség (V)</th></tr>
+            </thead>
+            <tbody id="data-table"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadData() {
+            const response = await fetch('/api/history');
+            const data = await response.json();
+            const tbody = document.getElementById('data-table');
+            tbody.innerHTML = '';
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${new Date(row.ts).toLocaleTimeString('hu-HU')}</td>
+                    <td>${row.total_act_power || 0} W</td>
+                    <td>${row.a_voltage || 0} V</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        loadData();
+    </script>
 </body>
 </html>

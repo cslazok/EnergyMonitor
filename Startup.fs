@@ -1,29 +1,28 @@
+open System
+open System.Threading.Tasks
 open Microsoft.AspNetCore.Builder
-open Microsoft.Extensions.Hosting
+open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.DependencyInjection
-open WebSharper.AspNetCore
+open EnergyMonitor
 
 [<EntryPoint>]
 let main args =
     let builder = WebApplication.CreateBuilder(args)
-
-    builder.Services.AddWebSharper()
-        .AddAuthentication("WebSharper")
-        .AddCookie("WebSharper", fun _ -> ())
-    |> ignore
-
+    // builder.Services.AddControllers() |> ignore // Ez opcionális, ha csak MapGet van
+    
     let app = builder.Build()
+    
+    app.UseDefaultFiles() |> ignore
+    app.UseStaticFiles() |> ignore
 
-    if not (app.Environment.IsDevelopment()) then
-        app.UseExceptionHandler("/Error").UseHsts() |> ignore
-
-    app.UseHttpsRedirection()
-#if DEBUG
-        .UseWebSharperScriptRedirect(startVite = true)
-#endif
-        .UseDefaultFiles()
-        .UseStaticFiles()
-    |> ignore
+    app.MapGet("/api/history", new Func<Task<IResult>>(fun () ->
+        task {
+            try
+                let! data = Database.getShellyDataLastHour()
+                return Results.Ok(data)
+            with ex ->
+                return Results.Problem(ex.Message)
+        })) |> ignore
 
     app.Run()
     0

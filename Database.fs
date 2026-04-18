@@ -1,50 +1,48 @@
 namespace EnergyMonitor
 
+open System
 open Npgsql
-open SqlHydra.Query
-open EnergyMonitor.Db
 open EnergyMonitor.Db.Tables
-
-open DotNetEnv 
+open DotNetEnv
 
 module Database =
-  
-    if System.IO.File.Exists(".env") then
-     DotNetEnv.Env.Load() |> ignore
-    
-    let private connString = DotNetEnv.Env.GetString("DB_CONNECTION")
-    let getLatestShellyData () =
+
+    let getConnString () = 
+        Env.Load() |> ignore
+        Env.GetString("DB_CONNECTION")
+
+    let getShellyDataLastHour () =
         task {
-            use conn = new NpgsqlConnection(connString)
+            let connStr = getConnString()
+            use conn = new NpgsqlConnection(connStr)
             do! conn.OpenAsync()
-            
-            let compiler = SqlKata.Compilers.PostgresCompiler()
-            let ctx = new QueryContext(conn, compiler)
 
-            let! rows =
-                selectTask ctx {
-                    for x in shelly_3em_live do 
-                    take 1
-                    select x
-                }
+            let sql = """
+                SELECT id, ts, device_id, a_voltage, total_act_power
+                FROM shelly_3em_live
+                WHERE ts >= NOW() - INTERVAL '1 hour'
+                ORDER BY ts DESC
+            """
+            use cmd = new NpgsqlCommand(sql, conn)
+            use! reader = cmd.ExecuteReaderAsync()
 
-            return rows
-        }
+            let results = System.Collections.Generic.List<shelly_3em_live>()
+            while reader.Read() do
+                results.Add({
+                    id = reader.GetInt64(0)
+                    ts = reader.GetDateTime(1)
+                    device_id = reader.GetInt32(2)
+                    a_current = None
+                    a_voltage = if reader.IsDBNull(3) then None else Some(reader.GetDouble(3))
+                    a_act_power = None; a_aprt_power = None; a_pf = None; a_freq = None
+                    b_current = None; b_voltage = None; b_act_power = None; b_aprt_power = None; b_pf = None; b_freq = None
+                    c_current = None; c_voltage = None; c_act_power = None; c_aprt_power = None; c_pf = None; c_freq = None
+                    n_current = None
+                    total_current = None
+                    total_act_power = if reader.IsDBNull(4) then None else Some(reader.GetDouble(4))
+                    total_aprt_power = None
+                    import_power = None; export_power = None
+                })
 
-    let getLatestPowerData () =
-        task {
-            use conn = new NpgsqlConnection(connString)
-            do! conn.OpenAsync()
-            
-            let compiler = SqlKata.Compilers.PostgresCompiler()
-            let ctx = new QueryContext(conn, compiler)
-
-            let! rows =
-                selectTask ctx {
-                    for x in shelly_3em_energy do 
-                    take 1
-                    select x
-                }
-
-            return rows
+            return results |> Seq.toList
         }
