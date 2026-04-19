@@ -1,12 +1,10 @@
 namespace EnergyMonitor
-
 open System
 open Npgsql
 open EnergyMonitor.Db.Tables
 open DotNetEnv
 
 module Database =
-
     let getConnString () = 
         Env.Load() |> ignore
         Env.GetString("DB_CONNECTION")
@@ -16,16 +14,14 @@ module Database =
             let connStr = getConnString()
             use conn = new NpgsqlConnection(connStr)
             do! conn.OpenAsync()
-
             let sql = """
-                SELECT id, ts, device_id, a_voltage, total_act_power
+                SELECT id, ts, device_id, a_voltage, total_act_power, total_current
                 FROM shelly_3em_live
                 WHERE ts >= NOW() - INTERVAL '1 hour'
                 ORDER BY ts DESC
             """
             use cmd = new NpgsqlCommand(sql, conn)
             use! reader = cmd.ExecuteReaderAsync()
-
             let results = System.Collections.Generic.List<shelly_3em_live>()
             while reader.Read() do
                 results.Add({
@@ -38,12 +34,11 @@ module Database =
                     b_current = None; b_voltage = None; b_act_power = None; b_aprt_power = None; b_pf = None; b_freq = None
                     c_current = None; c_voltage = None; c_act_power = None; c_aprt_power = None; c_pf = None; c_freq = None
                     n_current = None
-                    total_current = None
+                    total_current = if reader.IsDBNull(5) then None else Some(reader.GetDouble(5))
                     total_act_power = if reader.IsDBNull(4) then None else Some(reader.GetDouble(4))
                     total_aprt_power = None
                     import_power = None; export_power = None
                 })
-
             return results |> Seq.toList
         }
 
@@ -52,7 +47,6 @@ module Database =
             let connStr = getConnString()
             use conn = new NpgsqlConnection(connStr)
             do! conn.OpenAsync()
-
             let sql = """
                 SELECT id, ts, device_id, total_act, total_act_ret, import_total_kwh, export_total_kwh, net_total_kwh
                 FROM shelly_3em_energy
@@ -61,7 +55,6 @@ module Database =
             """
             use cmd = new NpgsqlCommand(sql, conn)
             use! reader = cmd.ExecuteReaderAsync()
-
             let results = System.Collections.Generic.List<Db.Tables.shelly_3em_energy>()
             while reader.Read() do
                 results.Add({
@@ -74,6 +67,5 @@ module Database =
                     export_total_kwh = if reader.IsDBNull(6) then None else Some(reader.GetDouble(6))
                     net_total_kwh = if reader.IsDBNull(7) then None else Some(reader.GetDouble(7))
                 })
-
             return results |> Seq.toList
         }
