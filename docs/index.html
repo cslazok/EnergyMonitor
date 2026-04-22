@@ -465,35 +465,34 @@
         let allData = [], chart = null;
 
         async function loadData() {
-            const btn = document.querySelector('.refresh-btn');
-            btn.classList.add('loading');
-            
-            try {
-                                document.getElementById('status-text').textContent = 'Fetching live data...';
-                const response = await fetch('/api/history');
-                if (!response.ok) throw new Error('API unavailable');
-                allData = await response.json();
-                document.getElementById('status-text').textContent = 'Live · 1h window';
-                document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB');
-            } catch(e) {
-                
-                const response = await fetch('/EnergyMonitor/data-live.json');
-                try {
-                    const response = await fetch('/EnergyMonitor/data-live.json');
-                    if (!response.ok) throw new Error('Demo data unavailable');
-                    allData = await response.json();
-                    document.getElementById('status-text').textContent = 'Demo Mode · Local Data';
-                    document.getElementById('last-updated').textContent = 'Demo dataset';
-                } catch(e2) {
-                    console.error('Demo data load failed:', e2);
-                    document.getElementById('status-text').textContent = 'Error: No data available';
-                    btn.classList.remove('loading');
-                    return;
-                }
-            }
-            renderTable();
+    const btn = document.querySelector('.refresh-btn');
+    btn.classList.add('loading');
+    
+    try {
+        document.getElementById('status-text').textContent = 'Fetching live data...';
+        const response = await fetch('/api/history');
+        if (!response.ok) throw new Error('API unavailable');
+        allData = await response.json();
+        document.getElementById('status-text').textContent = 'Live · 1h window';
+        document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB');
+    } catch(e) {
+        console.log('Live API failed, loading demo data:', e.message);
+        try {
+            const response = await fetch('/EnergyMonitor/data-live.json');
+            if (!response.ok) throw new Error('Demo data unavailable');
+            allData = await response.json();
+            document.getElementById('status-text').textContent = 'Demo Mode · Local Data';
+            document.getElementById('last-updated').textContent = 'Demo dataset';
+        } catch(e2) {
+            console.error('Demo data load failed:', e2);
+            document.getElementById('status-text').textContent = 'Error: No data available';
             btn.classList.remove('loading');
+            return;
         }
+    }
+    renderTable();
+    btn.classList.remove('loading');
+}
 
         function getFiltered() {
             const from = document.getElementById('filter-from').value;
