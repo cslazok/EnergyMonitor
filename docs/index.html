@@ -480,7 +480,7 @@
                 // Fallback to demo data
                 console.log('Live API failed, loading demo data:', e.message);
                 try {
-                    const response = await fetch('./data-live.json');
+                    const response = await fetch('/EnergyMonitor/data-live.json');
                     if (!response.ok) throw new Error('Demo data unavailable');
                     allData = await response.json();
                     document.getElementById('status-text').textContent = 'Demo Mode · Local Data';
