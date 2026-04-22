@@ -498,17 +498,33 @@
         async function loadData() {
             const btn = document.querySelector('.refresh-btn');
             btn.classList.add('loading');
-            document.getElementById('status-text').textContent = 'Fetching data...';
+            
             try {
+                // Try live API first
+                document.getElementById('status-text').textContent = 'Fetching live data...';
                 const response = await fetch('/api/energy');
+                if (!response.ok) throw new Error('API unavailable');
                 allData = await response.json();
                 document.getElementById('status-text').textContent = 'Live · 1h window';
                 document.getElementById('last-updated').textContent = 
                     'Updated ' + new Date().toLocaleTimeString('en-GB');
-                renderTable();
             } catch(e) {
-                document.getElementById('status-text').textContent = 'Connection error';
+                // Fallback to demo data
+                console.log('Live API failed, loading demo data:', e.message);
+                try {
+                    const response = await fetch('data-energy.json');
+                    if (!response.ok) throw new Error('Demo data unavailable');
+                    allData = await response.json();
+                    document.getElementById('status-text').textContent = 'Demo Mode · Local Data';
+                    document.getElementById('last-updated').textContent = 'Demo dataset';
+                } catch(e2) {
+                    console.error('Demo data load failed:', e2);
+                    document.getElementById('status-text').textContent = 'Error: No data available';
+                    btn.classList.remove('loading');
+                    return;
+                }
             }
+            renderTable();
             btn.classList.remove('loading');
         }
 
