@@ -1,6 +1,10 @@
-This project was started as a way to learn F#. I would like to monitor my own household energy consumption. Net metering will end soon, and I would like to calculate whether it would be worth buying an energy storage system. The project is still in an early stage. So far, I have one power meter that sends data through Node-RED into a database. This is where the F# project connects, and it will also be part of a university assignment.
+This project was started as a way to learn F#. Its main purpose is to monitor my household energy consumption. Since net metering will end soon, I would like to calculate whether investing in an energy storage system would be worthwhile.
 
-Demo:
+The project is still in an early stage. At the moment, I have one power meter that sends data through Node-RED into a database. The F# application connects to this database, and the project will also be used as part of a university assignment.
+
+In the future, I would like to replace Node-RED completely and build the whole system in F#. The long-term goal is for the F# application to handle data collection, serve the web interface, perform calculations, write data into the database, and read it back for visualization and analysis. I would also like to add MQTT and Modbus support later.
+
+## Demo
 https://cslazok.github.io/EnergyMonitor/energy.html
 
 ## Screenshots
