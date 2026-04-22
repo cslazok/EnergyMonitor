@@ -495,32 +495,38 @@
             ret:    { border: '#c46bff', bg: 'rgba(196,107,255,0.15)' },
         };
 
-    async function loadData() {
-    const btn = document.querySelector('.refresh-btn');
-    btn.classList.add('loading');
-    document.getElementById('status-text').textContent = 'Fetching demo data...';
-    try {
-        let response;
-
-    try {
-    response = await fetch('/api/energy');
-    if (!response.ok) throw new Error();
-    } catch {
-    response = await fetch('./demo-energy.json');
+        async function loadData() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.classList.add('loading');
+            
+            try {
+                // Try live API first
+                document.getElementById('status-text').textContent = 'Fetching live data...';
+                const response = await fetch('/api/energy');
+                if (!response.ok) throw new Error('API unavailable');
+                allData = await response.json();
+                document.getElementById('status-text').textContent = 'Live · 1h window';
+                document.getElementById('last-updated').textContent = 
+                    'Updated ' + new Date().toLocaleTimeString('en-GB');
+            } catch(e) {
+                // Fallback to demo data
+                console.log('Live API failed, loading demo data:', e.message);
+                try {
+                    const response = await fetch('data-energy.json');
+                    if (!response.ok) throw new Error('Demo data unavailable');
+                    allData = await response.json();
+                    document.getElementById('status-text').textContent = 'Demo Mode · Local Data';
+                    document.getElementById('last-updated').textContent = 'Demo dataset';
+                } catch(e2) {
+                    console.error('Demo data load failed:', e2);
+                    document.getElementById('status-text').textContent = 'Error: No data available';
+                    btn.classList.remove('loading');
+                    return;
+                }
+            }
+            renderTable();
+            btn.classList.remove('loading');
         }
-        if (!response.ok) throw new Error('Failed to load demo data');
-        allData = await response.json();
-        document.getElementById('status-text').textContent = 'Demo mode · local JSON';
-        document.getElementById('last-updated').textContent =
-            'Updated ' + new Date().toLocaleTimeString('en-GB');
-        renderTable();
-    } catch (e) {
-        document.getElementById('status-text').textContent = 'Demo data error';
-        document.getElementById('data-table').innerHTML =
-            '<tr><td colspan="6" class="empty-state">Could not load demo-energy.json</td></tr>';
-    }
-    btn.classList.remove('loading');
-}
 
         function getFiltered() {
             const from = document.getElementById('filter-from').value;
