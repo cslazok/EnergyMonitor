@@ -6,4 +6,4 @@ node_modules/
 .env
 *.dll
 *.pdb
-wwwroot/Scripts/WebSharper*
+wwwroot/
