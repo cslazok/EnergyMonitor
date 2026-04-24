@@ -52,7 +52,7 @@ Shelly 3EM → Node-RED → PostgreSQL → F# Web App (Giraffe)
 [▶ Live Demo (GitHub Pages)](https://cslazok.github.io/EnergyMonitor/)
 
 ## Screenshot
-![EnergyMonitor dashboard](https://raw.githubusercontent.com/cslazok/EnergyMonitor/main/docs/Screenshot.png)
+![EnergyMonitor dashboard](https://raw.githubusercontent.com/cslazok/EnergyMonitor/main/docs/screenshot.png)
 
 ---
 Built with **F#** and [Giraffe](https://github.com/giraffe-fsharp/Giraffe).
