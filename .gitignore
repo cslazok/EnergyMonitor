@@ -7,3 +7,4 @@ node_modules/
 *.dll
 *.pdb
 wwwroot/Scripts/WebSharper*
+.fake

@@ -12,35 +12,67 @@ module Client =
     type Page = | Live | History
     let currentPage = Var.Create Live
 
-    type LiveEnergy = {
-        total_act_power: float
-        total_current: float
-        total_aprt_power: float
-        a_voltage: float
-        a_act_power: float
+    type LiveEnergyData = {
+        inverterActivePower: float
+        inverterDailyYield: float
+        totalActivePower: float
+        calculatedMeterWh: float
+        lastUpdated: string
     }
 
-    let historyView =
-        let historyData = Var.Create []
+    let liveData = Var.Create (None: LiveEnergyData option)
+
+    let refreshLive () =
         async {
-            let! res = Server.GetLastHourData() |> Async.AwaitTask
-            historyData.Value <- res
+            while true do
+                try
+                    let! data = 
+                        Fetch.Fetch("/api/data")
+                        |> Async.AwaitTask
+                    let! json = data.Json() |> Async.AwaitTask
+                    let parsed = As<LiveEnergyData> json
+                    liveData.Value <- Some parsed
+                with _ -> ()
+                do! Async.Sleep 1000
         } |> Async.Start
 
+    let historyView =
         div [attr.``class`` "section"] [
             h2 [] [text "Múltbéli adatok (Utolsó 1 óra)"]
-            table [attr.``class`` "table table-striped"] [
-                thead [ tr [ th [text "Idő"]; th [text "Teljesítmény (W)"]; th [text "Feszültség (V)"] ] ]
-                tbody [
-                    historyData.View.DocSeqCached(fun (row: Db.Tables.shelly_3em_live) ->
-                        tr [
-                            td [text (row.created_at.ToString("HH:mm:ss"))]
-                            td [text (sprintf "%.1f W" (row.total_act_power |> Option.defaultValue 0.0))]
-                            td [text (sprintf "%.1f V" (row.a_voltage |> Option.defaultValue 0.0))]
+            p [] [text "A múltbéli adatok betöltése folyamatban..."]
+        ]
+
+    let liveView =
+        div [attr.``class`` "row"] [
+            liveData.View.DocLens (function
+                | None -> div [attr.``class`` "col-12 text-center"] [ text "Várakozás adatokra..." ]
+                | Some data ->
+                    div [attr.``class`` "col-12"] [
+                        div [attr.``class`` "row"] [
+                            // Inverter Card
+                            div [attr.``class`` "col-md-6 mb-3"] [
+                                div [attr.``class`` "card bg-success text-white"] [
+                                    div [attr.``class`` "card-body"] [
+                                        h5 [attr.``class`` "card-title"] [text "Napelem Inverter"]
+                                        h2 [] [text (sprintf "%.1f W" data.inverterActivePower)]
+                                        p [] [text (sprintf "Ma: %.2f kWh" data.inverterDailyYield)]
+                                    ]
+                                ]
+                            ]
+                            // Shelly Card
+                            div [attr.``class`` "col-md-6 mb-3"] [
+                                div [attr.``class`` "card bg-primary text-white"] [
+                                    div [attr.``class`` "card-body"] [
+                                        h5 [attr.``class`` "card-title"] [text "Ház Fogyasztása"]
+                                        h2 [] [text (sprintf "%.1f W" data.totalActivePower)]
+                                        p [] [text (sprintf "Óraállás: %.2f kWh" (data.calculatedMeterWh / 1000.0))]
+                                    ]
+                                ]
+                            ]
                         ]
-                    )
-                ]
-            ]
+                        p [attr.``class`` "text-muted small"] [text (sprintf "Utolsó frissítés: %s" data.lastUpdated)]
+                    ]
+            )
         ]
 
     let pageView =
@@ -54,7 +86,7 @@ module Client =
             ]
             div [attr.``class`` "container mt-4"] [
                 currentPage.View.DocLens (function
-                    | Live -> div [] [ h2 [] [text "Pillanatnyi adatok"]; p [] [text "Itt látszódnának az élő kártyák..."] ]
+                    | Live -> div [] [ h2 [attr.``class`` "mb-4"] [text "Pillanatnyi adatok"]; liveView ]
                     | History -> historyView
                 )
             ]
@@ -62,4 +94,5 @@ module Client =
 
     [<SPAEntryPoint>]
     let Main () =
+        refreshLive()
         pageView |> Doc.RunById "main"
