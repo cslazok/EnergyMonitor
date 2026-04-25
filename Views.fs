@@ -1,0 +1,194 @@
+namespace EnergyMonitor
+
+open System
+open Giraffe.ViewEngine
+
+module Views =
+
+    let opt f = Option.map f >> Option.defaultValue "-"
+    let optF fmt v = v |> Option.map (sprintf fmt) |> Option.defaultValue "-"
+
+    let layout (titleStr: string) (content: XmlNode list) =
+        html [ _lang "hu" ] [
+            head [] [
+                meta [ _charset "UTF-8" ]
+                meta [ _name "viewport"; _content "width=device-width, initial-scale=1.0" ]
+                title [] [ str titleStr ]
+                link [ _rel "stylesheet"; _href "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" ]
+                link [ _rel "stylesheet"; _href "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" ]
+                style [] [
+                    str """
+                    body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
+                    .navbar { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
+                    .navbar-brand { font-weight: 700; font-size: 1.3rem; }
+                    .stat-card { border: none; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: transform 0.2s; }
+                    .stat-card:hover { transform: translateY(-4px); }
+                    .stat-value { font-size: 1.8rem; font-weight: 700; }
+                    .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+                    .phase-a { border-top: 4px solid #ef5350; }
+                    .phase-b { border-top: 4px solid #42a5f5; }
+                    .phase-c { border-top: 4px solid #66bb6a; }
+                    .total-card { border-top: 4px solid #ab47bc; }
+                    .energy-card { border-top: 4px solid #ff7043; background: linear-gradient(135deg, #fff3e0, #fff8f5); }
+                    .kwh-value { font-size: 1.5rem; font-weight: 700; }
+                    .table-container { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+                    .phase-badge-a { background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+                    .phase-badge-b { background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+                    .phase-badge-c { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+                    .nav-link { color: rgba(255,255,255,0.85) !important; font-weight: 500; }
+                    .nav-link:hover, .nav-link.active { color: #fff !important; }
+                    """
+                ]
+            ]
+            body [] [
+                nav [ _class "navbar navbar-expand-lg navbar-dark mb-4 shadow" ] [
+                    div [ _class "container" ] [
+                        a [ _class "navbar-brand"; _href "/" ] [
+                            span [ _class "me-2" ] [ str "⚡" ]
+                            str "Energy Monitor"
+                        ]
+                        div [ _class "navbar-nav ms-auto" ] [
+                            a [ _class "nav-link"; _href "/" ] [ str "📊 Irányítópult" ]
+                            a [ _class "nav-link"; _href "/history" ] [ str "🕒 Előzmények" ]
+                            a [ _class "nav-link"; _href "/energy" ] [ str "⚡ Energia (kWh)" ]
+                        ]
+                    ]
+                ]
+                main [ _class "container pb-5" ] content
+                footer [ _class "container text-center mt-4 mb-3 text-muted small" ] [
+                    hr []
+                    p [] [ str (sprintf "© %d EnergyMonitor · Shelly 3EM · F# + Giraffe" DateTime.Now.Year) ]
+                ]
+            ]
+        ]
+
+    let phaseCard (phase: string) (cssClass: string) (voltage: float option) (current: float option) (power: float option) (pf: float option) =
+        div [ _class "col-md-4 col-sm-12" ] [
+            div [ _class (sprintf "card stat-card %s p-4 h-100" cssClass) ] [
+                h5 [ _class "fw-bold mb-3" ] [ str (sprintf "Fázis %s" phase) ]
+                div [ _class "row g-2" ] [
+                    div [ _class "col-6" ] [
+                        div [ _class "stat-label" ] [ str "Feszültség" ]
+                        div [ _class "stat-value" ] [ str (optF "%.1f V" voltage) ]
+                    ]
+                    div [ _class "col-6" ] [
+                        div [ _class "stat-label" ] [ str "Áram" ]
+                        div [ _class "stat-value" ] [ str (optF "%.2f A" current) ]
+                    ]
+                    div [ _class "col-6" ] [
+                        div [ _class "stat-label" ] [ str "Teljesítmény" ]
+                        div [ _class "stat-value" ] [ str (optF "%.1f W" power) ]
+                    ]
+                    div [ _class "col-6" ] [
+                        div [ _class "stat-label" ] [ str "Cos φ" ]
+                        div [ _class "stat-value" ] [ str (optF "%.2f" pf) ]
+                    ]
+                ]
+            ]
+        ]
+
+    let liveDashboard (latest: Db.Tables.shelly_3em_live) (energy: Db.Tables.shelly_3em_energy option) =
+        [
+            div [ _class "d-flex justify-content-between align-items-center mb-4" ] [
+                h2 [ _class "fw-bold mb-0" ] [ str "Élő adatok" ]
+                span [ _class "badge bg-success" ] [ str (sprintf "● Utolsó mérés: %s" (latest.ts.ToString("HH:mm:ss"))) ]
+            ]
+            // Összesített kártya
+            div [ _class "card stat-card total-card p-4 mb-4" ] [
+                h5 [ _class "fw-bold mb-3" ] [ str "Összesített fogyasztás" ]
+                div [ _class "row g-3" ] [
+                    div [ _class "col-md-3 col-6" ] [
+                        div [ _class "stat-label" ] [ str "Össz. Teljesítmény" ]
+                        div [ _class "stat-value text-purple" ] [ str (optF "%.1f W" latest.total_act_power) ]
+                    ]
+                    div [ _class "col-md-3 col-6" ] [
+                        div [ _class "stat-label" ] [ str "Össz. Áram" ]
+                        div [ _class "stat-value" ] [ str (optF "%.2f A" latest.total_current) ]
+                    ]
+                    div [ _class "col-md-3 col-6" ] [
+                        div [ _class "stat-label" ] [ str "Import" ]
+                        div [ _class "stat-value text-danger" ] [ str (optF "%.1f W" latest.import_power) ]
+                    ]
+                    div [ _class "col-md-3 col-6" ] [
+                        div [ _class "stat-label" ] [ str "Export" ]
+                        div [ _class "stat-value text-success" ] [ str (optF "%.1f W" latest.export_power) ]
+                    ]
+                ]
+            ]
+            // 3 fázis kártyák
+            div [ _class "row g-4 mb-4" ] [
+                phaseCard "A" "phase-a" latest.a_voltage latest.a_current latest.a_act_power latest.a_pf
+                phaseCard "B" "phase-b" latest.b_voltage latest.b_current latest.b_act_power latest.b_pf
+                phaseCard "C" "phase-c" latest.c_voltage latest.c_current latest.c_act_power latest.c_pf
+            ]
+            // Göngyölt energia kártya
+            match energy with
+            | Some e ->
+                div [ _class "card stat-card energy-card p-4 mb-4" ] [
+                    h5 [ _class "fw-bold mb-3" ] [ str "⚡ Göngyölt energia értékek" ]
+                    div [ _class "row g-3 text-center" ] [
+                        div [ _class "col-md-3 col-6" ] [
+                            div [ _class "stat-label" ] [ str "Import összesen" ]
+                            div [ _class "kwh-value text-danger" ] [ str (optF "%.3f kWh" e.import_total_kwh) ]
+                        ]
+                        div [ _class "col-md-3 col-6" ] [
+                            div [ _class "stat-label" ] [ str "Export összesen" ]
+                            div [ _class "kwh-value text-success" ] [ str (optF "%.3f kWh" e.export_total_kwh) ]
+                        ]
+                        div [ _class "col-md-3 col-6" ] [
+                            div [ _class "stat-label" ] [ str "Nettó" ]
+                            div [ _class "kwh-value text-primary" ] [ str (optF "%.3f kWh" e.net_total_kwh) ]
+                        ]
+                        div [ _class "col-md-3 col-6" ] [
+                            div [ _class "stat-label" ] [ str "Össz. aktív" ]
+                            div [ _class "kwh-value" ] [ str (optF "%.3f kWh" e.total_act) ]
+                        ]
+                    ]
+                ]
+            | None ->
+                div [ _class "alert alert-warning" ] [ str "Nincs elérhető göngyölt energia adat." ]
+        ] |> layout "Energy Monitor - Irányítópult"
+
+    let historyTable (data: Db.Tables.shelly_3em_live list) =
+        [
+            div [ _class "d-flex justify-content-between align-items-center mb-4" ] [
+                h2 [ _class "fw-bold mb-0" ] [ str "Előzmények (Utolsó 1 óra)" ]
+                span [ _class "badge bg-secondary fs-6" ] [ str (sprintf "%d bejegyzés" data.Length) ]
+            ]
+            div [ _class "table-container" ] [
+                div [ _class "table-responsive" ] [
+                    table [ _class "table table-hover align-middle" ] [
+                        thead [ _class "table-dark" ] [
+                            tr [] [
+                                th [] [ str "Időpont" ]
+                                th [] [ str "Össz. Teljesítmény" ]
+                                th [ _class "text-center" ] [ span [ _class "phase-badge-a" ] [ str "Fázis A" ] ]
+                                th [ _class "text-center" ] [ span [ _class "phase-badge-b" ] [ str "Fázis B" ] ]
+                                th [ _class "text-center" ] [ span [ _class "phase-badge-c" ] [ str "Fázis C" ] ]
+                                th [] [ str "Össz. Áram" ]
+                            ]
+                        ]
+                        tbody [] [
+                            for row in data ->
+                                tr [] [
+                                    td [ _class "fw-bold text-muted small" ] [ str (row.ts.ToString("yyyy-MM-dd HH:mm:ss")) ]
+                                    td [ _class "fw-bold" ] [ str (optF "%.1f W" row.total_act_power) ]
+                                    td [ _class "text-center" ] [
+                                        div [ _class "small" ] [ str (optF "%.1f W" row.a_act_power) ]
+                                        div [ _class "text-muted small" ] [ str (optF "%.1f V" row.a_voltage) ]
+                                    ]
+                                    td [ _class "text-center" ] [
+                                        div [ _class "small" ] [ str (optF "%.1f W" row.b_act_power) ]
+                                        div [ _class "text-muted small" ] [ str (optF "%.1f V" row.b_voltage) ]
+                                    ]
+                                    td [ _class "text-center" ] [
+                                        div [ _class "small" ] [ str (optF "%.1f W" row.c_act_power) ]
+                                        div [ _class "text-muted small" ] [ str (optF "%.1f V" row.c_voltage) ]
+                                    ]
+                                    td [] [ str (optF "%.2f A" row.total_current) ]
+                                ]
+                        ]
+                    ]
+                ]
+            ]
+        ] |> layout "Energy Monitor - Előzmények"
