@@ -88,6 +88,12 @@ module Views =
             ]
         ]
 
+    let private statCell label css value =
+        div [ _class "col-md-3 col-6" ] [
+            div [ _class "stat-label" ] [ str label ]
+            div [ _class (sprintf "kwh-value %s" css) ] [ str value ]
+        ]
+
     let inverterCard (inv: Inverter.Snapshot) =
         let statusBadge =
             if inv.Connected then span [ _class "badge bg-success ms-2" ] [ str "● Online" ]
@@ -98,40 +104,32 @@ module Views =
             | Some p when p > 0.0 -> sprintf "%.0f W (merít)" p
             | Some _ -> "0 W"
             | None -> "-"
+        let pvPower (v: float option) (i: float option) =
+            match v, i with
+            | Some v, Some i -> sprintf "%.0f W" (v * i)
+            | _ -> "-"
         div [ _class "card stat-card inverter-card p-4 mb-4" ] [
             div [ _class "d-flex align-items-center mb-3" ] [
                 h5 [ _class "fw-bold mb-0" ] [ str "☀️ Napelem Inverter" ]
                 statusBadge
             ]
             div [ _class "row g-3 text-center" ] [
-                div [ _class "col-md-3 col-6" ] [
-                    div [ _class "stat-label" ] [ str "Inverter kimenet" ]
-                    div [ _class "kwh-value text-warning" ] [ str (optF "%.0f W" inv.ActivePower) ]
-                ]
-                div [ _class "col-md-3 col-6" ] [
-                    div [ _class "stat-label" ] [ str "Napi termelés" ]
-                    div [ _class "kwh-value text-success" ] [ str (optF "%.2f kWh" inv.DailyYield) ]
-                ]
-                div [ _class "col-md-3 col-6" ] [
-                    div [ _class "stat-label" ] [ str "Összes termelés" ]
-                    div [ _class "kwh-value" ] [ str (optF "%.1f kWh" inv.TotalYield) ]
-                ]
-                div [ _class "col-md-3 col-6" ] [
-                    div [ _class "stat-label" ] [ str "Akksi töltöttség" ]
-                    div [ _class "kwh-value text-info" ] [ str (optF "%.1f %%" inv.BatterySOC) ]
-                ]
-                div [ _class "col-md-3 col-6" ] [
-                    div [ _class "stat-label" ] [ str "Akksi teljesítmény" ]
-                    div [ _class "kwh-value" ] [ str batteryText ]
-                ]
-                div [ _class "col-md-3 col-6" ] [
-                    div [ _class "stat-label" ] [ str "Hőmérséklet" ]
-                    div [ _class "kwh-value" ] [ str (optF "%.1f °C" inv.Temperature) ]
-                ]
-                div [ _class "col-md-3 col-6" ] [
-                    div [ _class "stat-label" ] [ str "Hatásfok" ]
-                    div [ _class "kwh-value" ] [ str (optF "%.1f %%" inv.Efficiency) ]
-                ]
+                statCell "PV összteljesítmény" "text-warning" (optF "%.0f W"   inv.PvTotalPower)
+                statCell "Inverter kimenet"    "text-warning" (optF "%.0f W"   inv.ActivePower)
+                statCell "Napi termelés"       "text-success" (optF "%.2f kWh" inv.DailyYield)
+                statCell "Összes termelés"     ""             (optF "%.1f kWh" inv.TotalYield)
+                statCell "Hőmérséklet"         ""             (optF "%.1f °C"  inv.Temperature)
+            ]
+            hr [ _class "my-3" ]
+            div [ _class "row g-3 text-center" ] [
+                statCell "PV1 feszültség"  "text-info"    (optF "%.1f V"  inv.Pv1Voltage)
+                statCell "PV1 áram"        "text-info"    (optF "%.2f A"  inv.Pv1Current)
+                statCell "PV1 teljesítmény" "text-warning" (pvPower inv.Pv1Voltage inv.Pv1Current)
+                statCell "PV2 feszültség"  "text-info"    (optF "%.1f V"  inv.Pv2Voltage)
+                statCell "PV2 áram"        "text-info"    (optF "%.2f A"  inv.Pv2Current)
+                statCell "PV2 teljesítmény" "text-warning" (pvPower inv.Pv2Voltage inv.Pv2Current)
+                statCell "Akksi töltöttség" "text-info"   (optF "%.1f %%" inv.BatterySOC)
+                statCell "Akksi teljesítmény" ""          batteryText
             ]
         ]
 
@@ -139,13 +137,11 @@ module Views =
         [
             div [ _class "d-flex justify-content-between align-items-center mb-4" ] [
                 h2 [ _class "fw-bold mb-0" ] [ str "Élő adatok" ]
-                span [ _class "badge bg-success" ] [ str (sprintf "● Utolsó mérés: %s" (latest.ts.ToString("HH:mm:ss"))) ]
+                span [ _class "badge bg-success" ] [ str (sprintf "● Utolsó mérés: %s" (latest.ts.ToLocalTime().ToString("HH:mm:ss"))) ]
             ]
-            // Inverter kártya
             match inverter with
             | Some inv -> inverterCard inv
             | None -> div [ _class "alert alert-secondary mb-4" ] [ str "☀️ Inverter nem elérhető." ]
-            // Összesített kártya
             div [ _class "card stat-card total-card p-4 mb-4" ] [
                 h5 [ _class "fw-bold mb-3" ] [ str "Összesített fogyasztás" ]
                 div [ _class "row g-3" ] [
@@ -167,13 +163,11 @@ module Views =
                     ]
                 ]
             ]
-            // 3 fázis kártyák
             div [ _class "row g-4 mb-4" ] [
                 phaseCard "A" "phase-a" latest.a_voltage latest.a_current latest.a_act_power latest.a_pf
                 phaseCard "B" "phase-b" latest.b_voltage latest.b_current latest.b_act_power latest.b_pf
                 phaseCard "C" "phase-c" latest.c_voltage latest.c_current latest.c_act_power latest.c_pf
             ]
-            // Göngyölt energia kártya
             match energy with
             | Some e ->
                 div [ _class "card stat-card energy-card p-4 mb-4" ] [
@@ -223,7 +217,7 @@ module Views =
                         tbody [] [
                             for row in data ->
                                 tr [] [
-                                    td [ _class "fw-bold text-muted small" ] [ str (row.ts.ToString("yyyy-MM-dd HH:mm:ss")) ]
+                                    td [ _class "fw-bold text-muted small" ] [ str (row.ts.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")) ]
                                     td [ _class "fw-bold" ] [ str (optF "%.1f W" row.total_act_power) ]
                                     td [ _class "text-center" ] [
                                         div [ _class "small" ] [ str (optF "%.1f W" row.a_act_power) ]

@@ -5,21 +5,19 @@ open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Giraffe
-open Giraffe.ViewEngine
 open EnergyMonitor
-
-// ---------------------------------
-// Web API / Handlers
-// ---------------------------------
 
 let dashboardHandler : HttpHandler =
     fun (next : HttpFunc) (ctx : Microsoft.AspNetCore.Http.HttpContext) ->
         task {
-            let! data = Database.getShellyDataLastHour()
-            let! energyData = Database.getEnergyDataLastHour()
-            let! inverterData = Inverter.getSnapshot()
+            let t1 = Database.getShellyDataLastHour()
+            let t2 = Database.getEnergyDataLastHour()
+            let! data        = t1
+            let! energyData  = t2
             let latest = data |> List.tryHead |> Option.defaultValue (Database.generateDummyShellyData() |> List.head)
             let latestEnergy = energyData |> List.tryHead
+            let inverterState = ctx.RequestServices.GetRequiredService<InverterState>()
+            let inverterData  = Inverter.buildSnapshot inverterState
             return! htmlView (Views.liveDashboard latest latestEnergy inverterData) next ctx
         }
 
@@ -37,35 +35,28 @@ let apiHistoryHandler : HttpHandler =
             return! json data next ctx
         }
 
-// ---------------------------------
-// Web Routes
-// ---------------------------------
-
 let webApp =
     choose [
         GET >=> choose [
             route "/"            >=> dashboardHandler
             route "/history"     >=> historyHandler
             route "/api/history" >=> apiHistoryHandler
-            route "/api/energy"  >=> (fun next ctx -> task { 
+            route "/api/energy"  >=> (fun next ctx -> task {
                 let! data = Database.getEnergyDataLastHour()
-                return! json data next ctx 
+                return! json data next ctx
             })
         ]
         setStatusCode 404 >=> text "Not Found"
     ]
 
-// ---------------------------------
-// Main
-// ---------------------------------
-
 [<EntryPoint>]
 let main args =
     let builder = WebApplication.CreateBuilder(args)
-    
-    // Add Giraffe and other services
-    builder.Services.AddGiraffe() |> ignore
-    
+
+    builder.Services.AddGiraffe()                              |> ignore
+    builder.Services.AddSingleton<InverterState>()             |> ignore
+    builder.Services.AddHostedService<ModbusReaderService>()   |> ignore
+
     let app = builder.Build()
 
     if app.Environment.IsDevelopment() then
