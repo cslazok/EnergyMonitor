@@ -10,3 +10,4 @@ wwwroot/Scripts/WebSharper*
 .fake
 publish/
 dotnet-install.sh
+notes.txt
