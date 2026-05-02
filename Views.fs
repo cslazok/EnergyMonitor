@@ -30,6 +30,7 @@ module Views =
                     .phase-c { border-top: 4px solid #66bb6a; }
                     .total-card { border-top: 4px solid #ab47bc; }
                     .energy-card { border-top: 4px solid #ff7043; background: linear-gradient(135deg, #fff3e0, #fff8f5); }
+                    .inverter-card { border-top: 4px solid #f59e0b; background: linear-gradient(135deg, #fffbeb, #fefce8); }
                     .kwh-value { font-size: 1.5rem; font-weight: 700; }
                     .table-container { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
                     .phase-badge-a { background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
@@ -87,12 +88,63 @@ module Views =
             ]
         ]
 
-    let liveDashboard (latest: Db.Tables.shelly_3em_live) (energy: Db.Tables.shelly_3em_energy option) =
+    let inverterCard (inv: Inverter.Snapshot) =
+        let statusBadge =
+            if inv.Connected then span [ _class "badge bg-success ms-2" ] [ str "● Online" ]
+            else span [ _class "badge bg-danger ms-2" ] [ str "● Offline" ]
+        let batteryText =
+            match inv.BatteryPower with
+            | Some p when p < 0.0 -> sprintf "%.0f W (tölt)" p
+            | Some p when p > 0.0 -> sprintf "%.0f W (merít)" p
+            | Some _ -> "0 W"
+            | None -> "-"
+        div [ _class "card stat-card inverter-card p-4 mb-4" ] [
+            div [ _class "d-flex align-items-center mb-3" ] [
+                h5 [ _class "fw-bold mb-0" ] [ str "☀️ Napelem Inverter" ]
+                statusBadge
+            ]
+            div [ _class "row g-3 text-center" ] [
+                div [ _class "col-md-3 col-6" ] [
+                    div [ _class "stat-label" ] [ str "Inverter kimenet" ]
+                    div [ _class "kwh-value text-warning" ] [ str (optF "%.0f W" inv.ActivePower) ]
+                ]
+                div [ _class "col-md-3 col-6" ] [
+                    div [ _class "stat-label" ] [ str "Napi termelés" ]
+                    div [ _class "kwh-value text-success" ] [ str (optF "%.2f kWh" inv.DailyYield) ]
+                ]
+                div [ _class "col-md-3 col-6" ] [
+                    div [ _class "stat-label" ] [ str "Összes termelés" ]
+                    div [ _class "kwh-value" ] [ str (optF "%.1f kWh" inv.TotalYield) ]
+                ]
+                div [ _class "col-md-3 col-6" ] [
+                    div [ _class "stat-label" ] [ str "Akksi töltöttség" ]
+                    div [ _class "kwh-value text-info" ] [ str (optF "%.1f %%" inv.BatterySOC) ]
+                ]
+                div [ _class "col-md-3 col-6" ] [
+                    div [ _class "stat-label" ] [ str "Akksi teljesítmény" ]
+                    div [ _class "kwh-value" ] [ str batteryText ]
+                ]
+                div [ _class "col-md-3 col-6" ] [
+                    div [ _class "stat-label" ] [ str "Hőmérséklet" ]
+                    div [ _class "kwh-value" ] [ str (optF "%.1f °C" inv.Temperature) ]
+                ]
+                div [ _class "col-md-3 col-6" ] [
+                    div [ _class "stat-label" ] [ str "Hatásfok" ]
+                    div [ _class "kwh-value" ] [ str (optF "%.1f %%" inv.Efficiency) ]
+                ]
+            ]
+        ]
+
+    let liveDashboard (latest: Db.Tables.shelly_3em_live) (energy: Db.Tables.shelly_3em_energy option) (inverter: Inverter.Snapshot option) =
         [
             div [ _class "d-flex justify-content-between align-items-center mb-4" ] [
                 h2 [ _class "fw-bold mb-0" ] [ str "Élő adatok" ]
                 span [ _class "badge bg-success" ] [ str (sprintf "● Utolsó mérés: %s" (latest.ts.ToString("HH:mm:ss"))) ]
             ]
+            // Inverter kártya
+            match inverter with
+            | Some inv -> inverterCard inv
+            | None -> div [ _class "alert alert-secondary mb-4" ] [ str "☀️ Inverter nem elérhető." ]
             // Összesített kártya
             div [ _class "card stat-card total-card p-4 mb-4" ] [
                 h5 [ _class "fw-bold mb-3" ] [ str "Összesített fogyasztás" ]

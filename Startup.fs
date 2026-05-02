@@ -17,9 +17,10 @@ let dashboardHandler : HttpHandler =
         task {
             let! data = Database.getShellyDataLastHour()
             let! energyData = Database.getEnergyDataLastHour()
+            let! inverterData = Inverter.getSnapshot()
             let latest = data |> List.tryHead |> Option.defaultValue (Database.generateDummyShellyData() |> List.head)
             let latestEnergy = energyData |> List.tryHead
-            return! htmlView (Views.liveDashboard latest latestEnergy) next ctx
+            return! htmlView (Views.liveDashboard latest latestEnergy inverterData) next ctx
         }
 
 let historyHandler : HttpHandler =
