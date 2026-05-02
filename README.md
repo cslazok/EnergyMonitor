@@ -75,5 +75,16 @@ Huawei SUN2000 ──→ Modbus TCP ───────────┘
 ## Screenshot
 ![EnergyMonitor dashboard](https://raw.githubusercontent.com/cslazok/EnergyMonitor/main/docs/screenshot.png)
 
+## Dependencies
+
+| Library | Purpose |
+|---------|---------|
+| [Giraffe](https://github.com/giraffe-fsharp/Giraffe) | F# web framework on top of ASP.NET Core |
+| [Giraffe.ViewEngine](https://github.com/giraffe-fsharp/Giraffe) | Server-side HTML rendering in F# |
+| [FluentModbus](https://github.com/Apollo3zehn/FluentModbus) | Modbus TCP client for inverter communication |
+| [SqlHydra.Query](https://github.com/JordanMarr/SqlHydra) | Type-safe SQL query builder |
+| [Npgsql](https://github.com/npgsql/npgsql) | .NET PostgreSQL driver |
+| [DotNetEnv](https://github.com/tonerdo/dotnet-env) | `.env` file loading |
+
 ---
-Built with **F#**, [Giraffe](https://github.com/giraffe-fsharp/Giraffe) and [FluentModbus](https://github.com/Apollo3zehn/FluentModbus).
+Built with **F#** on .NET 10.
