@@ -2,6 +2,8 @@
 
 A household energy monitoring application written in **F#**, tracking 3-phase consumption from a Shelly 3EM meter and real-time solar production from a Huawei SUN2000 inverter. The goal is to analyze whether adding battery storage makes financial sense after the phase-out of net metering.
 
+**[→ Live Demo](https://cslazok.github.io/EnergyMonitor/)** — simulated data, no database required
+
 ## Architecture
 
 ```
@@ -72,8 +74,11 @@ Huawei SUN2000 ──→ Modbus TCP ───────────┘
 | `/api/history` | JSON — Shelly live data |
 | `/api/energy` | JSON — cumulative energy data |
 
-## Screenshot
-![EnergyMonitor dashboard](https://raw.githubusercontent.com/cslazok/EnergyMonitor/main/docs/screenshot.png)
+## Demo
+
+A live demo with simulated data is available at **https://cslazok.github.io/EnergyMonitor/**
+
+[![Demo](https://raw.githubusercontent.com/cslazok/EnergyMonitor/main/docs/screenshot.png)](https://cslazok.github.io/EnergyMonitor/)
 
 ## Dependencies
 
