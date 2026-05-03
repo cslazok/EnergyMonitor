@@ -94,8 +94,10 @@ let main args =
     let builder = WebApplication.CreateBuilder(args)
 
     builder.Services.AddGiraffe()                              |> ignore
+    builder.Services.AddSingleton<MqttPublisher>()             |> ignore
     builder.Services.AddSingleton<InverterState>()             |> ignore
     builder.Services.AddHostedService<ModbusReaderService>()   |> ignore
+    builder.Services.AddHostedService<ShellyMqttService>()     |> ignore
 
     let app = builder.Build()
 

@@ -26,7 +26,7 @@ module ModbusHelpers =
     let toInt32  (regs: uint16[]) i = (int32  regs.[i] <<< 16) ||| int32  regs.[i + 1]
     let toUInt32 (regs: uint16[]) i = (uint32 regs.[i] <<< 16) ||| uint32 regs.[i + 1]
 
-type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfiguration, state: InverterState) =
+type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfiguration, state: InverterState, mqtt: MqttPublisher) =
     inherit BackgroundService()
 
     override _.ExecuteAsync(stoppingToken: CancellationToken) =
@@ -116,6 +116,17 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
 
                     state.SetConnected true
                     logger.LogInformation("Poll OK — Grid: {0}W  PV: {1}W  Daily: {2}kWh  SOC: {3}%%", activePower, pvTotalPower, dailyYield, batterySOC)
+                    let topic = config.["Mqtt:InverterTopic"]
+                    let payload = System.Text.Json.JsonSerializer.Serialize({|
+                        connected    = true
+                        activePower  = activePower
+                        pvTotalPower = pvTotalPower
+                        dailyYield   = dailyYield
+                        totalYield   = totalYield
+                        batterySOC   = batterySOC
+                        batteryPower = batteryPower
+                        temperature  = temperature |})
+                    do! mqtt.Publish topic payload
                     do! Task.Delay(pollMs, stoppingToken)
 
                 with ex ->

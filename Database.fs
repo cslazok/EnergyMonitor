@@ -93,6 +93,90 @@ module Database =
             export_power     = getFloat 26
         }
 
+    let private dbObj (v: float option) : obj =
+        match v with Some x -> x :> obj | None -> DBNull.Value :> obj
+
+    let insertShellyLive (row: Db.Tables.shelly_3em_live) =
+        task {
+            match getConnString() with
+            | None -> ()
+            | Some connStr ->
+                use conn = new NpgsqlConnection(connStr)
+                do! conn.OpenAsync()
+                let sql = """
+                    INSERT INTO shelly_3em_live
+                    (ts, device_id,
+                     a_voltage, a_current, a_act_power, a_aprt_power, a_pf, a_freq,
+                     b_voltage, b_current, b_act_power, b_aprt_power, b_pf, b_freq,
+                     c_voltage, c_current, c_act_power, c_aprt_power, c_pf, c_freq,
+                     n_current, total_current, total_act_power, total_aprt_power,
+                     import_power, export_power)
+                    VALUES (@ts, @device_id,
+                            @a_voltage, @a_current, @a_act_power, @a_aprt_power, @a_pf, @a_freq,
+                            @b_voltage, @b_current, @b_act_power, @b_aprt_power, @b_pf, @b_freq,
+                            @c_voltage, @c_current, @c_act_power, @c_aprt_power, @c_pf, @c_freq,
+                            @n_current, @total_current, @total_act_power, @total_aprt_power,
+                            @import_power, @export_power)
+                """
+                use cmd = new NpgsqlCommand(sql, conn)
+                let p (n: string) (v: obj) = cmd.Parameters.AddWithValue(n, v) |> ignore
+                p "@ts"               (row.ts :> obj)
+                p "@device_id"        (row.device_id :> obj)
+                p "@a_voltage"        (dbObj row.a_voltage)
+                p "@a_current"        (dbObj row.a_current)
+                p "@a_act_power"      (dbObj row.a_act_power)
+                p "@a_aprt_power"     (dbObj row.a_aprt_power)
+                p "@a_pf"             (dbObj row.a_pf)
+                p "@a_freq"           (dbObj row.a_freq)
+                p "@b_voltage"        (dbObj row.b_voltage)
+                p "@b_current"        (dbObj row.b_current)
+                p "@b_act_power"      (dbObj row.b_act_power)
+                p "@b_aprt_power"     (dbObj row.b_aprt_power)
+                p "@b_pf"             (dbObj row.b_pf)
+                p "@b_freq"           (dbObj row.b_freq)
+                p "@c_voltage"        (dbObj row.c_voltage)
+                p "@c_current"        (dbObj row.c_current)
+                p "@c_act_power"      (dbObj row.c_act_power)
+                p "@c_aprt_power"     (dbObj row.c_aprt_power)
+                p "@c_pf"             (dbObj row.c_pf)
+                p "@c_freq"           (dbObj row.c_freq)
+                p "@n_current"        (dbObj row.n_current)
+                p "@total_current"    (dbObj row.total_current)
+                p "@total_act_power"  (dbObj row.total_act_power)
+                p "@total_aprt_power" (dbObj row.total_aprt_power)
+                p "@import_power"     (dbObj row.import_power)
+                p "@export_power"     (dbObj row.export_power)
+                let! _ = cmd.ExecuteNonQueryAsync()
+                ()
+        }
+
+    let insertShellyEnergy (row: Db.Tables.shelly_3em_energy) =
+        task {
+            match getConnString() with
+            | None -> ()
+            | Some connStr ->
+                use conn = new NpgsqlConnection(connStr)
+                do! conn.OpenAsync()
+                let sql = """
+                    INSERT INTO shelly_3em_energy
+                    (ts, device_id, total_act, total_act_ret, import_total_kwh, export_total_kwh, net_total_kwh)
+                    VALUES (@ts, @device_id, @total_act, @total_act_ret, @import_total_kwh, @export_total_kwh, @net_total_kwh)
+                """
+                use cmd = new NpgsqlCommand(sql, conn)
+                let p (n: string) (v: obj) = cmd.Parameters.AddWithValue(n, v) |> ignore
+                let optF (v: float option) : obj = match v with Some x -> x :> obj | None -> DBNull.Value :> obj
+                let optI (v: int option)   : obj = match v with Some x -> x :> obj | None -> DBNull.Value :> obj
+                p "@ts"               (row.ts :> obj)
+                p "@device_id"        (optI row.device_id)
+                p "@total_act"        (optF row.total_act)
+                p "@total_act_ret"    (optF row.total_act_ret)
+                p "@import_total_kwh" (optF row.import_total_kwh)
+                p "@export_total_kwh" (optF row.export_total_kwh)
+                p "@net_total_kwh"    (optF row.net_total_kwh)
+                let! _ = cmd.ExecuteNonQueryAsync()
+                ()
+        }
+
     let getShellyDataLastHour () =
         task {
             match getConnString() with
