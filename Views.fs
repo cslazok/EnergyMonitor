@@ -195,6 +195,50 @@ module Views =
                 div [ _class "alert alert-warning" ] [ str "Nincs elérhető göngyölt energia adat." ]
         ] |> layout "Energy Monitor - Irányítópult"
 
+    let energyPage (data: Db.Tables.shelly_3em_energy list) =
+        let latest = data |> List.tryHead
+        [
+            div [ _class "d-flex justify-content-between align-items-center mb-4" ] [
+                h2 [ _class "fw-bold mb-0" ] [ str "⚡ Energia (kWh)" ]
+                match latest with
+                | Some e -> span [ _class "badge bg-success" ] [ str (sprintf "● Utolsó mérés: %s" (e.ts.ToLocalTime().ToString("HH:mm:ss"))) ]
+                | None   -> span [ _class "badge bg-secondary" ] [ str "Nincs adat" ]
+            ]
+            match latest with
+            | None -> div [ _class "alert alert-warning" ] [ str "Nincs elérhető energia adat." ]
+            | Some e ->
+                div [ _class "row g-4 mb-4" ] [
+                    div [ _class "col-md-6" ] [
+                        div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #ef5350;" ] [
+                            div [ _class "stat-label" ] [ str "Import összesen" ]
+                            div [ _class "display-4 fw-bold text-danger" ] [ str (optF "%.3f kWh" e.import_total_kwh) ]
+                            small [ _class "text-muted" ] [ str "Hálózatból felvett energia" ]
+                        ]
+                    ]
+                    div [ _class "col-md-6" ] [
+                        div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #66bb6a;" ] [
+                            div [ _class "stat-label" ] [ str "Export összesen" ]
+                            div [ _class "display-4 fw-bold text-success" ] [ str (optF "%.3f kWh" e.export_total_kwh) ]
+                            small [ _class "text-muted" ] [ str "Hálózatba visszatáplált energia" ]
+                        ]
+                    ]
+                    div [ _class "col-md-6" ] [
+                        div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #42a5f5;" ] [
+                            div [ _class "stat-label" ] [ str "Nettó egyenleg" ]
+                            div [ _class "display-4 fw-bold text-primary" ] [ str (optF "%.3f kWh" e.net_total_kwh) ]
+                            small [ _class "text-muted" ] [ str "Negatív = többet termeltél, mint fogyasztottál" ]
+                        ]
+                    ]
+                    div [ _class "col-md-6" ] [
+                        div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #ab47bc;" ] [
+                            div [ _class "stat-label" ] [ str "Összes aktív energia" ]
+                            div [ _class "display-4 fw-bold" ] [ str (optF "%.3f kWh" e.total_act) ]
+                            small [ _class "text-muted" ] [ str "Teljes aktív fogyasztás" ]
+                        ]
+                    ]
+                ]
+        ] |> layout "Energy Monitor - Energia"
+
     let historyTable (data: Db.Tables.shelly_3em_live list) =
         [
             div [ _class "d-flex justify-content-between align-items-center mb-4" ] [

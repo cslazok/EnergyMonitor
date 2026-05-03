@@ -81,6 +81,10 @@ let webApp =
             route "/history"     >=> historyHandler
             route "/api/history" >=> apiHistoryHandler
             route "/api/status"  >=> statusHandler
+            route "/energy"      >=> (fun next ctx -> task {
+                let! data = Database.getEnergyDataLastHour()
+                return! htmlView (Views.energyPage data) next ctx
+            })
             route "/api/energy"  >=> (fun next ctx -> task {
                 let! data = Database.getEnergyDataLastHour()
                 return! json data next ctx
