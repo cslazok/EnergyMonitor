@@ -115,6 +115,7 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     state.UpdateData "batteryPower"  (batteryPower :> obj)
 
                     state.SetConnected true
+                    do! Database.insertInverterLive true (state.GetData())
                     logger.LogInformation("Poll OK — Grid: {0}W  PV: {1}W  Daily: {2}kWh  SOC: {3}%%", activePower, pvTotalPower, dailyYield, batterySOC)
                     let topic = config.["Mqtt:InverterTopic"]
                     let payload = System.Text.Json.JsonSerializer.Serialize({|

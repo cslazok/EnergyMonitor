@@ -177,6 +177,50 @@ module Database =
                 ()
         }
 
+    let insertInverterLive (connected: bool) (data: System.Collections.Generic.IDictionary<string, obj>) =
+        task {
+            match getConnString() with
+            | None -> ()
+            | Some connStr ->
+                use conn = new NpgsqlConnection(connStr)
+                do! conn.OpenAsync()
+                let sql = """
+                    INSERT INTO inverter_live
+                    (ts, connected, active_power, pv_total_power,
+                     pv1_voltage, pv1_current, pv2_voltage, pv2_current,
+                     daily_yield, total_yield, battery_soc, battery_power,
+                     temperature, grid_frequency, power_factor, status)
+                    VALUES (@ts, @connected, @active_power, @pv_total_power,
+                            @pv1_voltage, @pv1_current, @pv2_voltage, @pv2_current,
+                            @daily_yield, @total_yield, @battery_soc, @battery_power,
+                            @temperature, @grid_frequency, @power_factor, @status)
+                """
+                use cmd = new NpgsqlCommand(sql, conn)
+                let p (n: string) (v: obj) = cmd.Parameters.AddWithValue(n, v) |> ignore
+                let f key : obj =
+                    match data.TryGetValue(key) with
+                    | true, (:? float as v) -> v :> obj
+                    | _ -> DBNull.Value :> obj
+                p "@ts"             (DateTime.UtcNow :> obj)
+                p "@connected"      (connected :> obj)
+                p "@active_power"   (f "activePower")
+                p "@pv_total_power" (f "pvTotalPower")
+                p "@pv1_voltage"    (f "pv1Voltage")
+                p "@pv1_current"    (f "pv1Current")
+                p "@pv2_voltage"    (f "pv2Voltage")
+                p "@pv2_current"    (f "pv2Current")
+                p "@daily_yield"    (f "dailyYield")
+                p "@total_yield"    (f "totalYield")
+                p "@battery_soc"    (f "batterySOC")
+                p "@battery_power"  (f "batteryPower")
+                p "@temperature"    (f "temperature")
+                p "@grid_frequency" (f "gridFrequency")
+                p "@power_factor"   (f "powerFactor")
+                p "@status"         (f "status")
+                let! _ = cmd.ExecuteNonQueryAsync()
+                ()
+        }
+
     let getShellyDataLastHour () =
         task {
             match getConnString() with
