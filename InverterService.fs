@@ -29,14 +29,40 @@ module ModbusHelpers =
 type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfiguration, state: InverterState, mqtt: MqttPublisher) =
     inherit BackgroundService()
 
-    override _.ExecuteAsync(stoppingToken: CancellationToken) =
+    let publishDiscovery (mqtt: MqttPublisher) (stateTopic: string) =
+        let device = {| identifiers = [| "energymonitor_inverter" |]; name = "Inverter"; model = "Huawei SUN2000"; manufacturer = "Huawei" |}
+        let sensor (uid: string) (name: string) (valueTemplate: string) (unit: string) (deviceClass: string) (stateClass: string) =
+            let payload = System.Text.Json.JsonSerializer.Serialize({|
+                name             = name
+                unique_id        = uid
+                state_topic      = stateTopic
+                value_template   = valueTemplate
+                unit_of_measurement = unit
+                device_class     = (if deviceClass = "" then null else deviceClass)
+                state_class      = (if stateClass   = "" then null else stateClass)
+                device           = device |})
+            mqtt.Publish (sprintf "homeassistant/sensor/%s/config" uid) payload
+        task {
+            do! sensor "inv_active_power"    "Inverter Active Power"    "{{ value_json.activePower }}"    "W"   "power"       "measurement"
+            do! sensor "inv_pv_total"        "Inverter PV Power"        "{{ value_json.pvTotalPower }}"   "W"   "power"       "measurement"
+            do! sensor "inv_daily_yield"     "Inverter Daily Yield"     "{{ value_json.dailyYield }}"     "kWh" "energy"      "total_increasing"
+            do! sensor "inv_total_yield"     "Inverter Total Yield"     "{{ value_json.totalYield }}"     "kWh" "energy"      "total_increasing"
+            do! sensor "inv_battery_soc"     "Inverter Battery SOC"     "{{ value_json.batterySOC }}"     "%"   "battery"     "measurement"
+            do! sensor "inv_battery_power"   "Inverter Battery Power"   "{{ value_json.batteryPower }}"   "W"   "power"       "measurement"
+            do! sensor "inv_temperature"     "Inverter Temperature"     "{{ value_json.temperature }}"    "°C"  "temperature" "measurement"
+            logger.LogInformation("MQTT discovery published.")
+        }
+
+    override this.ExecuteAsync(stoppingToken: CancellationToken) =
         let tsk = task {
             let ip   = config.["Inverter:Ip"]
             let port = int config.["Inverter:Port"]
             let unitId = int config.["Inverter:UnitId"]
             let pollMs = int config.["Inverter:PollIntervalSeconds"] * 1000
             let endpoint = sprintf "%s:%d" ip port
+            let stateTopic = config.["Mqtt:InverterTopic"]
             logger.LogInformation("Inverter reader starting. IP: {0}", ip)
+            do! publishDiscovery mqtt stateTopic
 
             use client = new ModbusTcpClient()
             client.ReadTimeout <- 8000
