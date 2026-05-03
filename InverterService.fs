@@ -43,13 +43,26 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                 device           = device |})
             mqtt.Publish (sprintf "homeassistant/sensor/%s/config" uid) payload
         task {
-            do! sensor "inv_active_power"    "Inverter Active Power"    "{{ value_json.activePower }}"    "W"   "power"       "measurement"
-            do! sensor "inv_pv_total"        "Inverter PV Power"        "{{ value_json.pvTotalPower }}"   "W"   "power"       "measurement"
-            do! sensor "inv_daily_yield"     "Inverter Daily Yield"     "{{ value_json.dailyYield }}"     "kWh" "energy"      "total_increasing"
-            do! sensor "inv_total_yield"     "Inverter Total Yield"     "{{ value_json.totalYield }}"     "kWh" "energy"      "total_increasing"
-            do! sensor "inv_battery_soc"     "Inverter Battery SOC"     "{{ value_json.batterySOC }}"     "%"   "battery"     "measurement"
-            do! sensor "inv_battery_power"   "Inverter Battery Power"   "{{ value_json.batteryPower }}"   "W"   "power"       "measurement"
-            do! sensor "inv_temperature"     "Inverter Temperature"     "{{ value_json.temperature }}"    "°C"  "temperature" "measurement"
+            do! sensor "inv_active_power"         "Inverter Active Power"         "{{ value_json.activePower }}"         "W"   "power"       "measurement"
+            do! sensor "inv_pv_total"             "Inverter PV Power"             "{{ value_json.pvTotalPower }}"        "W"   "power"       "measurement"
+            do! sensor "inv_pv1_voltage"          "Inverter PV1 Voltage"          "{{ value_json.pv1Voltage }}"          "V"   "voltage"     "measurement"
+            do! sensor "inv_pv1_current"          "Inverter PV1 Current"          "{{ value_json.pv1Current }}"          "A"   "current"     "measurement"
+            do! sensor "inv_pv2_voltage"          "Inverter PV2 Voltage"          "{{ value_json.pv2Voltage }}"          "V"   "voltage"     "measurement"
+            do! sensor "inv_pv2_current"          "Inverter PV2 Current"          "{{ value_json.pv2Current }}"          "A"   "current"     "measurement"
+            do! sensor "inv_l1_voltage"           "Inverter L1 Voltage"           "{{ value_json.l1Voltage }}"           "V"   "voltage"     "measurement"
+            do! sensor "inv_l1_current"           "Inverter L1 Current"           "{{ value_json.l1Current }}"           "A"   "current"     "measurement"
+            do! sensor "inv_l2_voltage"           "Inverter L2 Voltage"           "{{ value_json.l2Voltage }}"           "V"   "voltage"     "measurement"
+            do! sensor "inv_l2_current"           "Inverter L2 Current"           "{{ value_json.l2Current }}"           "A"   "current"     "measurement"
+            do! sensor "inv_l3_voltage"           "Inverter L3 Voltage"           "{{ value_json.l3Voltage }}"           "V"   "voltage"     "measurement"
+            do! sensor "inv_l3_current"           "Inverter L3 Current"           "{{ value_json.l3Current }}"           "A"   "current"     "measurement"
+            do! sensor "inv_daily_yield"          "Inverter Daily Yield"          "{{ value_json.dailyYield }}"          "kWh" "energy"      "total_increasing"
+            do! sensor "inv_total_yield"          "Inverter Total Yield"          "{{ value_json.totalYield }}"          "kWh" "energy"      "total_increasing"
+            do! sensor "inv_battery_soc"          "Inverter Battery SOC"          "{{ value_json.batterySOC }}"          "%"   "battery"     "measurement"
+            do! sensor "inv_battery_power"        "Inverter Battery Power"        "{{ value_json.batteryPower }}"        "W"   "power"       "measurement"
+            do! sensor "inv_temperature"          "Inverter Temperature"          "{{ value_json.temperature }}"         "°C"  "temperature" "measurement"
+            do! sensor "inv_grid_frequency"       "Inverter Grid Frequency"       "{{ value_json.gridFrequency }}"       "Hz"  "frequency"   "measurement"
+            do! sensor "inv_power_factor"         "Inverter Power Factor"         "{{ value_json.powerFactor }}"         ""    ""            "measurement"
+            do! sensor "inv_consumption"          "Inverter Consumption"          "{{ value_json.inverterConsumption }}" "W"   "power"       "measurement"
             logger.LogInformation("MQTT discovery published.")
         }
 
@@ -147,14 +160,27 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     logger.LogInformation("Poll OK — Grid: {0}W  PV: {1}W  Daily: {2}kWh  SOC: {3}%%", activePower, pvTotalPower, dailyYield, batterySOC)
                     let topic = config.["Mqtt:InverterTopic"]
                     let payload = System.Text.Json.JsonSerializer.Serialize({|
-                        connected    = true
-                        activePower  = activePower
-                        pvTotalPower = pvTotalPower
-                        dailyYield   = dailyYield
-                        totalYield   = totalYield
-                        batterySOC   = batterySOC
-                        batteryPower = batteryPower
-                        temperature  = temperature |})
+                        connected           = true
+                        activePower         = activePower
+                        pvTotalPower        = pvTotalPower
+                        pv1Voltage          = pv1Voltage
+                        pv1Current          = pv1Current
+                        pv2Voltage          = pv2Voltage
+                        pv2Current          = pv2Current
+                        l1Voltage           = l1Voltage
+                        l1Current           = l1Current
+                        l2Voltage           = l2Voltage
+                        l2Current           = l2Current
+                        l3Voltage           = l3Voltage
+                        l3Current           = l3Current
+                        dailyYield          = dailyYield
+                        totalYield          = totalYield
+                        batterySOC          = batterySOC
+                        batteryPower        = batteryPower
+                        temperature         = temperature
+                        gridFrequency       = gridFreq
+                        powerFactor         = powerFactor
+                        inverterConsumption = inverterConsumption |})
                     do! mqtt.Publish topic payload
                     do! Task.Delay(pollMs, stoppingToken)
 
