@@ -56,6 +56,32 @@
             <span class="badge bg-warning text-dark" id="last-update">● Demo mód</span>
         </div>
 
+        <!-- Inverter -->
+        <div class="card stat-card p-4 mb-4" style="border-top: 4px solid #f59e0b; background: linear-gradient(135deg, #fffbeb, #fefce8);">
+            <div class="d-flex align-items-center mb-3">
+                <h5 class="fw-bold mb-0">☀️ Napelem Inverter</h5>
+                <span class="badge bg-success ms-2">● Online</span>
+            </div>
+            <div class="row g-3 text-center">
+                <div class="col-md-3 col-6"><div class="stat-label">PV összteljesítmény</div><div class="kwh-value text-warning" id="pv-total">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">Inverter kimenet</div><div class="kwh-value text-warning" id="inv-active">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">Napi termelés</div><div class="kwh-value text-success" id="inv-daily">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">Összes termelés</div><div class="kwh-value" id="inv-total">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">Hőmérséklet</div><div class="kwh-value" id="inv-temp">–</div></div>
+            </div>
+            <hr class="my-3">
+            <div class="row g-3 text-center">
+                <div class="col-md-3 col-6"><div class="stat-label">PV1 feszültség</div><div class="kwh-value text-info" id="pv1-v">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">PV1 áram</div><div class="kwh-value text-info" id="pv1-i">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">PV1 teljesítmény</div><div class="kwh-value text-warning" id="pv1-p">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">PV2 feszültség</div><div class="kwh-value text-info" id="pv2-v">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">PV2 áram</div><div class="kwh-value text-info" id="pv2-i">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">PV2 teljesítmény</div><div class="kwh-value text-warning" id="pv2-p">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">Akksi töltöttség</div><div class="kwh-value text-info" id="bat-soc">–</div></div>
+                <div class="col-md-3 col-6"><div class="stat-label">Akksi teljesítmény</div><div class="kwh-value" id="bat-power">–</div></div>
+            </div>
+        </div>
+
         <!-- Összesített -->
         <div class="card stat-card total-card p-4 mb-4">
             <h5 class="fw-bold mb-3">Összesített fogyasztás</h5>
@@ -221,10 +247,41 @@
                  aPf: rand(0.85, 0.99), bPf: rand(0.85, 0.99), cPf: rand(0.85, 0.99) };
     }
 
+    // Inverter base values (realistic Huawei SUN2000 data)
+    const inv = {
+        pv1v: 382.5, pv1i: 8.52, pv2v: 376.0, pv2i: 8.78,
+        batSoc: 78.5, batPower: -1240, temp: 45.2, daily: 24.52, total: 37310.1
+    };
+
+    function jitter(v, pct) { return v + v * (Math.random() - 0.5) * pct; }
+
+    function updateInverter() {
+        const pv1v = jitter(inv.pv1v, 0.005), pv1i = jitter(inv.pv1i, 0.02);
+        const pv2v = jitter(inv.pv2v, 0.005), pv2i = jitter(inv.pv2i, 0.02);
+        const pv1p = pv1v * pv1i, pv2p = pv2v * pv2i;
+        const pvTotal = pv1p + pv2p;
+        const batPow = jitter(inv.batPower, 0.03);
+        const active = pvTotal + batPow - jitter(230, 0.05);
+        document.getElementById('pv-total').textContent   = fmt(pvTotal, 0) + ' W';
+        document.getElementById('inv-active').textContent = fmt(active, 0) + ' W';
+        document.getElementById('inv-daily').textContent  = fmt(inv.daily, 2) + ' kWh';
+        document.getElementById('inv-total').textContent  = fmt(inv.total, 1) + ' kWh';
+        document.getElementById('inv-temp').textContent   = fmt(jitter(inv.temp, 0.005), 1) + ' °C';
+        document.getElementById('pv1-v').textContent = fmt(pv1v, 1) + ' V';
+        document.getElementById('pv1-i').textContent = fmt(pv1i, 2) + ' A';
+        document.getElementById('pv1-p').textContent = fmt(pv1p, 0) + ' W';
+        document.getElementById('pv2-v').textContent = fmt(pv2v, 1) + ' V';
+        document.getElementById('pv2-i').textContent = fmt(pv2i, 2) + ' A';
+        document.getElementById('pv2-p').textContent = fmt(pv2p, 0) + ' W';
+        document.getElementById('bat-soc').textContent   = fmt(inv.batSoc, 1) + ' %';
+        document.getElementById('bat-power').textContent = fmt(batPow, 0) + ' W (tölt)';
+    }
+
     function updateDashboard() {
         const d = generateReading();
         const now = new Date();
         document.getElementById('last-update').textContent = '● Frissítve: ' + now.toLocaleTimeString('hu-HU');
+        updateInverter();
         document.getElementById('total-power').textContent = fmt(d.totalP, 1) + ' W';
         document.getElementById('total-current').textContent = fmt(d.totalC, 2) + ' A';
         document.getElementById('import-power').textContent = fmt(d.importP, 1) + ' W';
