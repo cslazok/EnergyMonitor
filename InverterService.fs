@@ -91,7 +91,8 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     let batterySOC   = float b5.[0] * 0.1
                     let batteryPower = float (ModbusHelpers.toInt32 b5 5)
 
-                    let pvTotalPower = pv1Voltage * pv1Current + pv2Voltage * pv2Current
+                    let pvTotalPower        = pv1Voltage * pv1Current + pv2Voltage * pv2Current
+                    let inverterConsumption = pvTotalPower - activePower - batteryPower
 
                     state.UpdateData "pv1Voltage"    (pv1Voltage   :> obj)
                     state.UpdateData "pv1Current"    (pv1Current   :> obj)
@@ -111,8 +112,9 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     state.UpdateData "status"        (status       :> obj)
                     state.UpdateData "dailyYield"    (dailyYield   :> obj)
                     state.UpdateData "totalYield"    (totalYield   :> obj)
-                    state.UpdateData "batterySOC"    (batterySOC   :> obj)
-                    state.UpdateData "batteryPower"  (batteryPower :> obj)
+                    state.UpdateData "batterySOC"           (batterySOC          :> obj)
+                    state.UpdateData "batteryPower"         (batteryPower        :> obj)
+                    state.UpdateData "inverterConsumption"  (inverterConsumption :> obj)
 
                     state.SetConnected true
                     do! Database.insertInverterLive true (state.GetData())
