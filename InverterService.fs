@@ -47,8 +47,10 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
             do! sensor "inv_pv_total"             "Inverter PV Power"             "{{ value_json.pvTotalPower }}"        "W"   "power"       "measurement"
             do! sensor "inv_pv1_voltage"          "Inverter PV1 Voltage"          "{{ value_json.pv1Voltage }}"          "V"   "voltage"     "measurement"
             do! sensor "inv_pv1_current"          "Inverter PV1 Current"          "{{ value_json.pv1Current }}"          "A"   "current"     "measurement"
+            do! sensor "inv_pv1_power"            "Inverter PV1 Power"            "{{ value_json.pv1Power }}"            "W"   "power"       "measurement"
             do! sensor "inv_pv2_voltage"          "Inverter PV2 Voltage"          "{{ value_json.pv2Voltage }}"          "V"   "voltage"     "measurement"
             do! sensor "inv_pv2_current"          "Inverter PV2 Current"          "{{ value_json.pv2Current }}"          "A"   "current"     "measurement"
+            do! sensor "inv_pv2_power"            "Inverter PV2 Power"            "{{ value_json.pv2Power }}"            "W"   "power"       "measurement"
             do! sensor "inv_l1_voltage"           "Inverter L1 Voltage"           "{{ value_json.l1Voltage }}"           "V"   "voltage"     "measurement"
             do! sensor "inv_l1_current"           "Inverter L1 Current"           "{{ value_json.l1Current }}"           "A"   "current"     "measurement"
             do! sensor "inv_l2_voltage"           "Inverter L2 Voltage"           "{{ value_json.l2Voltage }}"           "V"   "voltage"     "measurement"
@@ -130,13 +132,17 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     let batterySOC   = float b5.[0] * 0.1
                     let batteryPower = float (ModbusHelpers.toInt32 b5 5)
 
-                    let pvTotalPower        = pv1Voltage * pv1Current + pv2Voltage * pv2Current
+                    let pv1Power           = pv1Voltage * pv1Current
+                    let pv2Power           = pv2Voltage * pv2Current
+                    let pvTotalPower        = pv1Power + pv2Power
                     let inverterConsumption = pvTotalPower - activePower - batteryPower
 
                     state.UpdateData "pv1Voltage"    (pv1Voltage   :> obj)
                     state.UpdateData "pv1Current"    (pv1Current   :> obj)
+                    state.UpdateData "pv1Power"      (pv1Power     :> obj)
                     state.UpdateData "pv2Voltage"    (pv2Voltage   :> obj)
                     state.UpdateData "pv2Current"    (pv2Current   :> obj)
+                    state.UpdateData "pv2Power"      (pv2Power     :> obj)
                     state.UpdateData "pvTotalPower"  (pvTotalPower :> obj)
                     state.UpdateData "l1Voltage"     (l1Voltage    :> obj)
                     state.UpdateData "l2Voltage"     (l2Voltage    :> obj)
@@ -165,8 +171,10 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                         pvTotalPower        = pvTotalPower
                         pv1Voltage          = pv1Voltage
                         pv1Current          = pv1Current
+                        pv1Power            = pv1Power
                         pv2Voltage          = pv2Voltage
                         pv2Current          = pv2Current
+                        pv2Power            = pv2Power
                         l1Voltage           = l1Voltage
                         l1Current           = l1Current
                         l2Voltage           = l2Voltage

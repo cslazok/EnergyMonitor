@@ -191,13 +191,13 @@ module Database =
                      daily_yield, total_yield, battery_soc, battery_power,
                      temperature, grid_frequency, power_factor, status,
                      l1_voltage, l1_current, l2_voltage, l2_current, l3_voltage, l3_current,
-                     inverter_consumption)
+                     inverter_consumption, pv1_power, pv2_power)
                     VALUES (@ts, @connected, @active_power, @pv_total_power,
                             @pv1_voltage, @pv1_current, @pv2_voltage, @pv2_current,
                             @daily_yield, @total_yield, @battery_soc, @battery_power,
                             @temperature, @grid_frequency, @power_factor, @status,
                             @l1_voltage, @l1_current, @l2_voltage, @l2_current, @l3_voltage, @l3_current,
-                            @inverter_consumption)
+                            @inverter_consumption, @pv1_power, @pv2_power)
                 """
                 use cmd = new NpgsqlCommand(sql, conn)
                 let p (n: string) (v: obj) = cmd.Parameters.AddWithValue(n, v) |> ignore
@@ -228,6 +228,8 @@ module Database =
                 p "@l3_voltage"           (f "l3Voltage")
                 p "@l3_current"           (f "l3Current")
                 p "@inverter_consumption" (f "inverterConsumption")
+                p "@pv1_power"            (f "pv1Power")
+                p "@pv2_power"            (f "pv2Power")
                 let! _ = cmd.ExecuteNonQueryAsync()
                 ()
         }
