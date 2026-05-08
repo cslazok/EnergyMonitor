@@ -195,7 +195,12 @@ module Views =
                 div [ _class "alert alert-warning" ] [ str "Nincs elérhető göngyölt energia adat." ]
         ] |> layout "Energy Monitor - Irányítópult"
 
-    let energyPage (data: Db.Tables.shelly_3em_energy list) (calibration: Database.MeterCalibration) =
+    let private fmtHuf (v: float) =
+        let abs = System.Math.Abs(v)
+        let s = if abs >= 1000.0 then sprintf "%s %03.0f" (sprintf "%.0f" (System.Math.Floor(abs / 1000.0))) (abs % 1000.0) else sprintf "%.0f" abs
+        if v < 0.0 then sprintf "-%s Ft" s else sprintf "+%s Ft" s
+
+    let energyPage (data: Db.Tables.shelly_3em_energy list) (calibration: Database.MeterCalibration) (prices: Database.ElectricityPrices) =
         let latest = data |> List.tryHead
         let cal = calibration
         let calibrated (v: float option) (offset: float) = v |> Option.map (fun x -> x + offset)
@@ -242,21 +247,56 @@ module Views =
                     let periodImport = dispImport |> Option.map (fun v -> v - bi)
                     let periodExport = dispExport |> Option.map (fun v -> v - be)
                     let periodNet    = Option.map2 (fun ex i -> ex - i) periodExport periodImport
+                    let importCost (kwh: float) =
+                        if kwh <= prices.AnnualLimitKwh then kwh * prices.ImportLowHuf
+                        else prices.AnnualLimitKwh * prices.ImportLowHuf + (kwh - prices.AnnualLimitKwh) * prices.ImportHighHuf
+                    let exportRevenue (kwh: float) = kwh * prices.ExportHuf
                     div [ _class "card stat-card p-4 mb-4"; _style "border-top: 4px solid #f59e0b; background: linear-gradient(135deg, #fffbeb, #fefce8);" ] [
                         h5 [ _class "fw-bold mb-3" ] [ str (sprintf "📅 Időszak (alap: %.0f / %.0f kWh)" bi be) ]
-                        div [ _class "row g-3 text-center" ] [
+                        div [ _class "row g-3 text-center mb-3" ] [
                             div [ _class "col-md-4" ] [
                                 div [ _class "stat-label" ] [ str "Időszaki vétel" ]
-                                div [ _class "kwh-value text-danger" ] [ str (optF "%+.1f kWh" periodImport) ]
+                                div [ _class "kwh-value text-danger" ] [ str (optF "%.1f kWh" periodImport) ]
+                                small [ _class "text-muted" ] [ str (periodImport |> Option.map (fun v -> sprintf "%.0f Ft" -(importCost v)) |> Option.defaultValue "-") ]
                             ]
                             div [ _class "col-md-4" ] [
                                 div [ _class "stat-label" ] [ str "Időszaki eladás" ]
-                                div [ _class "kwh-value text-success" ] [ str (optF "%+.1f kWh" periodExport) ]
+                                div [ _class "kwh-value text-success" ] [ str (optF "%.1f kWh" periodExport) ]
+                                small [ _class "text-muted" ] [ str (periodExport |> Option.map (fun v -> sprintf "+%.0f Ft" (exportRevenue v)) |> Option.defaultValue "-") ]
                             ]
                             div [ _class "col-md-4" ] [
-                                div [ _class "stat-label" ] [ str "Időszaki nettó" ]
+                                div [ _class "stat-label" ] [ str "Nettó kWh" ]
                                 div [ _class (sprintf "kwh-value %s" (periodNet |> Option.map (fun n -> if n >= 0.0 then "text-success" else "text-danger") |> Option.defaultValue "")) ] [
                                     str (periodNet |> Option.map (fun n -> sprintf "%+.1f kWh" n) |> Option.defaultValue "-")
+                                ]
+                            ]
+                        ]
+                        hr [ _class "my-2" ]
+                        div [ _class "row g-3 text-center" ] [
+                            div [ _class "col-md-4" ] [
+                                div [ _class "stat-label" ] [ str "Villany költség" ]
+                                div [ _class "kwh-value text-danger" ] [
+                                    str (periodImport |> Option.map (fun v -> sprintf "%.0f Ft" (importCost v)) |> Option.defaultValue "-")
+                                ]
+                                small [ _class "text-muted" ] [
+                                    str (periodImport |> Option.map (fun v ->
+                                        if v <= prices.AnnualLimitKwh then sprintf "mind %.0f Ft/kWh" prices.ImportLowHuf
+                                        else sprintf "%.0f kWh × %.0f + %.0f kWh × %.0f" prices.AnnualLimitKwh prices.ImportLowHuf (v - prices.AnnualLimitKwh) prices.ImportHighHuf
+                                    ) |> Option.defaultValue "-")
+                                ]
+                            ]
+                            div [ _class "col-md-4" ] [
+                                div [ _class "stat-label" ] [ str "Betáplálás bevétel" ]
+                                div [ _class "kwh-value text-success" ] [
+                                    str (periodExport |> Option.map (fun v -> sprintf "%.0f Ft" (exportRevenue v)) |> Option.defaultValue "-")
+                                ]
+                                small [ _class "text-muted" ] [ str (sprintf "%.2f Ft/kWh" prices.ExportHuf) ]
+                            ]
+                            div [ _class "col-md-4" ] [
+                                div [ _class "stat-label" ] [ str "Nettó pénzügyi egyenleg" ]
+                                let netHuf = Option.map2 (fun imp exp -> exportRevenue exp - importCost imp) periodImport periodExport
+                                div [ _class (sprintf "kwh-value %s" (netHuf |> Option.map (fun n -> if n >= 0.0 then "text-success" else "text-danger") |> Option.defaultValue "")) ] [
+                                    str (netHuf |> Option.map fmtHuf |> Option.defaultValue "-")
                                 ]
                             ]
                         ]
@@ -289,6 +329,30 @@ module Views =
                     ]
                     div [ _class "col-md-2" ] [
                         button [ _type "submit"; _class "btn btn-secondary w-100 fw-bold" ] [ str "Mentés" ]
+                    ]
+                ]
+            ]
+            div [ _class "card stat-card p-4 mt-3"; _style "border-top: 4px solid #0d6efd;" ] [
+                h5 [ _class "fw-bold mb-3" ] [ str "💰 Áramdíj beállítás" ]
+                form [ _action "/energy/prices"; _method "post"; _class "row g-3 align-items-end" ] [
+                    div [ _class "col-md-3" ] [
+                        label [ _class "form-label small fw-bold" ] [ str (sprintf "Limit alatti ár (Ft/kWh) — jelenleg %.2f" prices.ImportLowHuf) ]
+                        input [ _type "number"; _name "import_low"; _class "form-control"; _step "0.01"; _placeholder (sprintf "%.2f" prices.ImportLowHuf) ]
+                    ]
+                    div [ _class "col-md-3" ] [
+                        label [ _class "form-label small fw-bold" ] [ str (sprintf "Limit feletti ár (Ft/kWh) — jelenleg %.2f" prices.ImportHighHuf) ]
+                        input [ _type "number"; _name "import_high"; _class "form-control"; _step "0.01"; _placeholder (sprintf "%.2f" prices.ImportHighHuf) ]
+                    ]
+                    div [ _class "col-md-2" ] [
+                        label [ _class "form-label small fw-bold" ] [ str (sprintf "Betáplálás (Ft/kWh) — %.2f" prices.ExportHuf) ]
+                        input [ _type "number"; _name "export_huf"; _class "form-control"; _step "0.01"; _placeholder (sprintf "%.2f" prices.ExportHuf) ]
+                    ]
+                    div [ _class "col-md-2" ] [
+                        label [ _class "form-label small fw-bold" ] [ str (sprintf "Éves limit (kWh) — %.0f" prices.AnnualLimitKwh) ]
+                        input [ _type "number"; _name "annual_limit"; _class "form-control"; _step "1"; _placeholder (sprintf "%.0f" prices.AnnualLimitKwh) ]
+                    ]
+                    div [ _class "col-md-2" ] [
+                        button [ _type "submit"; _class "btn btn-primary w-100 fw-bold" ] [ str "Mentés" ]
                     ]
                 ]
             ]

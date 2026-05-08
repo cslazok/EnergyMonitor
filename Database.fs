@@ -348,3 +348,44 @@ module Database =
                 let! _ = cmd.ExecuteNonQueryAsync()
                 ()
         }
+
+    type ElectricityPrices = {
+        ImportLowHuf:    float
+        ImportHighHuf:   float
+        ExportHuf:       float
+        AnnualLimitKwh:  float
+    }
+
+    let private defaultPrices = { ImportLowHuf = 36.0; ImportHighHuf = 70.1; ExportHuf = 5.11; AnnualLimitKwh = 2523.0 }
+
+    let getElectricityPrices () =
+        task {
+            match getConnString() with
+            | None -> return defaultPrices
+            | Some connStr ->
+                try
+                    use conn = new NpgsqlConnection(connStr)
+                    do! conn.OpenAsync()
+                    use cmd = new NpgsqlCommand("SELECT import_low_huf, import_high_huf, export_huf, annual_limit_kwh FROM electricity_prices ORDER BY valid_from DESC LIMIT 1", conn)
+                    use! reader = cmd.ExecuteReaderAsync()
+                    if reader.Read() then
+                        return { ImportLowHuf = reader.GetDouble(0); ImportHighHuf = reader.GetDouble(1); ExportHuf = reader.GetDouble(2); AnnualLimitKwh = reader.GetDouble(3) }
+                    else return defaultPrices
+                with _ -> return defaultPrices
+        }
+
+    let setElectricityPrices (p: ElectricityPrices) =
+        task {
+            match getConnString() with
+            | None -> ()
+            | Some connStr ->
+                use conn = new NpgsqlConnection(connStr)
+                do! conn.OpenAsync()
+                use cmd = new NpgsqlCommand("INSERT INTO electricity_prices (import_low_huf, import_high_huf, export_huf, annual_limit_kwh) VALUES (@a, @b, @c, @d)", conn)
+                cmd.Parameters.AddWithValue("@a", p.ImportLowHuf)   |> ignore
+                cmd.Parameters.AddWithValue("@b", p.ImportHighHuf)  |> ignore
+                cmd.Parameters.AddWithValue("@c", p.ExportHuf)      |> ignore
+                cmd.Parameters.AddWithValue("@d", p.AnnualLimitKwh) |> ignore
+                let! _ = cmd.ExecuteNonQueryAsync()
+                ()
+        }

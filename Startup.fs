@@ -84,7 +84,8 @@ let webApp =
             route "/energy"      >=> (fun next ctx -> task {
                 let! data        = Database.getEnergyDataLastHour()
                 let! calibration = Database.getMeterCalibration()
-                return! htmlView (Views.energyPage data calibration) next ctx
+                let! prices      = Database.getElectricityPrices()
+                return! htmlView (Views.energyPage data calibration prices) next ctx
             })
             route "/api/energy"  >=> (fun next ctx -> task {
                 let! data = Database.getEnergyDataLastHour()
@@ -116,6 +117,20 @@ let webApp =
                     let baselineExport = parseFloat "baseline_export"
                     do! Database.setMeterCalibration importOffset exportOffset baselineImport baselineExport
                     return! redirectTo false "/energy" next ctx
+        })
+        POST >=> route "/energy/prices" >=> (fun next ctx -> task {
+            let! form = ctx.Request.ReadFormAsync()
+            let parseFloat (key: string) =
+                let raw = form.[key].ToString().Trim()
+                let mutable v = 0.0
+                if System.Double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, &v) then Some v
+                elif System.Double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, &v) then Some v
+                else None
+            match parseFloat "import_low", parseFloat "import_high", parseFloat "export_huf", parseFloat "annual_limit" with
+            | Some a, Some b, Some c, Some d ->
+                do! Database.setElectricityPrices { ImportLowHuf = a; ImportHighHuf = b; ExportHuf = c; AnnualLimitKwh = d }
+                return! redirectTo false "/energy" next ctx
+            | _ -> return! text "Hibás érték" next ctx
         })
         setStatusCode 404 >=> text "Not Found"
     ]
