@@ -204,9 +204,13 @@ module Views =
         let latest = data |> List.tryHead
         let cal = calibration
         let calibrated (v: float option) (offset: float) = v |> Option.map (fun x -> x + offset)
+        let importCost (kwh: float) =
+            if kwh <= prices.AnnualLimitKwh then kwh * prices.ImportLowHuf
+            else prices.AnnualLimitKwh * prices.ImportLowHuf + (kwh - prices.AnnualLimitKwh) * prices.ImportHighHuf
+        let exportRevenue (kwh: float) = kwh * prices.ExportHuf
         [
             div [ _class "d-flex justify-content-between align-items-center mb-4" ] [
-                h2 [ _class "fw-bold mb-0" ] [ str "⚡ Energia (kWh)" ]
+                h2 [ _class "fw-bold mb-0" ] [ str "⚡ Szaldó év" ]
                 match latest with
                 | Some e -> span [ _class "badge bg-success" ] [ str (sprintf "● Utolsó mérés: %s" (e.ts.ToLocalTime().ToString("HH:mm:ss"))) ]
                 | None   -> span [ _class "badge bg-secondary" ] [ str "Nincs adat" ]
@@ -216,92 +220,71 @@ module Views =
             | Some e ->
                 let dispImport = calibrated e.import_total_kwh cal.ImportOffset
                 let dispExport = calibrated e.export_total_kwh cal.ExportOffset
-                let dispNet    = Option.map2 (fun i ex -> ex - i) dispImport dispExport
-                div [ _class "row g-4 mb-4" ] [
-                    div [ _class "col-md-4" ] [
-                        div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #ef5350;" ] [
-                            div [ _class "stat-label" ] [ str "Vásárolt összesen" ]
-                            div [ _class "display-4 fw-bold text-danger" ] [ str (optF "%.1f kWh" dispImport) ]
-                            small [ _class "text-muted" ] [ str (sprintf "Shelly: %s kWh" (optF "%.1f" e.import_total_kwh)) ]
-                        ]
-                    ]
-                    div [ _class "col-md-4" ] [
-                        div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #66bb6a;" ] [
-                            div [ _class "stat-label" ] [ str "Eladott összesen" ]
-                            div [ _class "display-4 fw-bold text-success" ] [ str (optF "%.1f kWh" dispExport) ]
-                            small [ _class "text-muted" ] [ str (sprintf "Shelly: %s kWh" (optF "%.1f" e.export_total_kwh)) ]
-                        ]
-                    ]
-                    div [ _class "col-md-4" ] [
-                        div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #42a5f5;" ] [
-                            div [ _class "stat-label" ] [ str "Nettó (+ = eladott több)" ]
-                            div [ _class (sprintf "display-4 fw-bold %s" (dispNet |> Option.map (fun n -> if n >= 0.0 then "text-success" else "text-danger") |> Option.defaultValue "")) ] [
-                                str (dispNet |> Option.map (fun n -> sprintf "%+.1f kWh" n) |> Option.defaultValue "-")
-                            ]
-                            small [ _class "text-muted" ] [ str "eladott − vásárolt" ]
-                        ]
-                    ]
-                ]
                 match cal.BaselineImport, cal.BaselineExport with
                 | Some bi, Some be ->
                     let periodImport = dispImport |> Option.map (fun v -> v - bi)
                     let periodExport = dispExport |> Option.map (fun v -> v - be)
                     let periodNet    = Option.map2 (fun ex i -> ex - i) periodExport periodImport
-                    let importCost (kwh: float) =
-                        if kwh <= prices.AnnualLimitKwh then kwh * prices.ImportLowHuf
-                        else prices.AnnualLimitKwh * prices.ImportLowHuf + (kwh - prices.AnnualLimitKwh) * prices.ImportHighHuf
-                    let exportRevenue (kwh: float) = kwh * prices.ExportHuf
-                    div [ _class "card stat-card p-4 mb-4"; _style "border-top: 4px solid #f59e0b; background: linear-gradient(135deg, #fffbeb, #fefce8);" ] [
-                        h5 [ _class "fw-bold mb-3" ] [ str (sprintf "📅 Időszak (alap: %.0f / %.0f kWh)" bi be) ]
-                        div [ _class "row g-3 text-center mb-3" ] [
-                            div [ _class "col-md-4" ] [
-                                div [ _class "stat-label" ] [ str "Időszaki vétel" ]
-                                div [ _class "kwh-value text-danger" ] [ str (optF "%.1f kWh" periodImport) ]
-                                small [ _class "text-muted" ] [ str (periodImport |> Option.map (fun v -> sprintf "%.0f Ft" -(importCost v)) |> Option.defaultValue "-") ]
-                            ]
-                            div [ _class "col-md-4" ] [
-                                div [ _class "stat-label" ] [ str "Időszaki eladás" ]
-                                div [ _class "kwh-value text-success" ] [ str (optF "%.1f kWh" periodExport) ]
-                                small [ _class "text-muted" ] [ str (periodExport |> Option.map (fun v -> sprintf "+%.0f Ft" (exportRevenue v)) |> Option.defaultValue "-") ]
-                            ]
-                            div [ _class "col-md-4" ] [
-                                div [ _class "stat-label" ] [ str "Nettó kWh" ]
-                                div [ _class (sprintf "kwh-value %s" (periodNet |> Option.map (fun n -> if n >= 0.0 then "text-success" else "text-danger") |> Option.defaultValue "")) ] [
-                                    str (periodNet |> Option.map (fun n -> sprintf "%+.1f kWh" n) |> Option.defaultValue "-")
-                                ]
+                    let netHuf       = Option.map2 (fun imp exp -> exportRevenue exp - importCost imp) periodImport periodExport
+                    // fő kártyák: szaldó év
+                    div [ _class "row g-4 mb-4" ] [
+                        div [ _class "col-md-3 col-6" ] [
+                            div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #ef5350;" ] [
+                                div [ _class "stat-label" ] [ str "Vásárolt (szaldó év)" ]
+                                div [ _class "display-5 fw-bold text-danger" ] [ str (optF "%.1f kWh" periodImport) ]
+                                small [ _class "text-muted" ] [ str (periodImport |> Option.map (fun v -> sprintf "%.0f Ft" (importCost v)) |> Option.defaultValue "-") ]
                             ]
                         ]
-                        hr [ _class "my-2" ]
-                        div [ _class "row g-3 text-center" ] [
-                            div [ _class "col-md-4" ] [
-                                div [ _class "stat-label" ] [ str "Villany költség" ]
-                                div [ _class "kwh-value text-danger" ] [
-                                    str (periodImport |> Option.map (fun v -> sprintf "%.0f Ft" (importCost v)) |> Option.defaultValue "-")
+                        div [ _class "col-md-3 col-6" ] [
+                            div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #66bb6a;" ] [
+                                div [ _class "stat-label" ] [ str "Eladott (szaldó év)" ]
+                                div [ _class "display-5 fw-bold text-success" ] [ str (optF "%.1f kWh" periodExport) ]
+                                small [ _class "text-muted" ] [ str (periodExport |> Option.map (fun v -> sprintf "%.0f Ft" (exportRevenue v)) |> Option.defaultValue "-") ]
+                            ]
+                        ]
+                        div [ _class "col-md-3 col-6" ] [
+                            div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #42a5f5;" ] [
+                                div [ _class "stat-label" ] [ str "Nettó kWh" ]
+                                div [ _class (sprintf "display-5 fw-bold %s" (periodNet |> Option.map (fun n -> if n >= 0.0 then "text-success" else "text-danger") |> Option.defaultValue "")) ] [
+                                    str (periodNet |> Option.map (fun n -> sprintf "%+.1f kWh" n) |> Option.defaultValue "-")
+                                ]
+                                small [ _class "text-muted" ] [ str "eladott − vásárolt" ]
+                            ]
+                        ]
+                        div [ _class "col-md-3 col-6" ] [
+                            div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #ab47bc;" ] [
+                                div [ _class "stat-label" ] [ str "Nettó egyenleg" ]
+                                div [ _class (sprintf "display-5 fw-bold %s" (netHuf |> Option.map (fun n -> if n >= 0.0 then "text-success" else "text-danger") |> Option.defaultValue "")) ] [
+                                    str (netHuf |> Option.map fmtHuf |> Option.defaultValue "-")
                                 ]
                                 small [ _class "text-muted" ] [
                                     str (periodImport |> Option.map (fun v ->
-                                        if v <= prices.AnnualLimitKwh then sprintf "mind %.0f Ft/kWh" prices.ImportLowHuf
-                                        else sprintf "%.0f kWh × %.0f + %.0f kWh × %.0f" prices.AnnualLimitKwh prices.ImportLowHuf (v - prices.AnnualLimitKwh) prices.ImportHighHuf
-                                    ) |> Option.defaultValue "-")
-                                ]
-                            ]
-                            div [ _class "col-md-4" ] [
-                                div [ _class "stat-label" ] [ str "Betáplálás bevétel" ]
-                                div [ _class "kwh-value text-success" ] [
-                                    str (periodExport |> Option.map (fun v -> sprintf "%.0f Ft" (exportRevenue v)) |> Option.defaultValue "-")
-                                ]
-                                small [ _class "text-muted" ] [ str (sprintf "%.2f Ft/kWh" prices.ExportHuf) ]
-                            ]
-                            div [ _class "col-md-4" ] [
-                                div [ _class "stat-label" ] [ str "Nettó pénzügyi egyenleg" ]
-                                let netHuf = Option.map2 (fun imp exp -> exportRevenue exp - importCost imp) periodImport periodExport
-                                div [ _class (sprintf "kwh-value %s" (netHuf |> Option.map (fun n -> if n >= 0.0 then "text-success" else "text-danger") |> Option.defaultValue "")) ] [
-                                    str (netHuf |> Option.map fmtHuf |> Option.defaultValue "-")
+                                        if v <= prices.AnnualLimitKwh then sprintf "%.0f Ft/kWh" prices.ImportLowHuf
+                                        else sprintf "%.0f+%.0f Ft/kWh" prices.ImportLowHuf prices.ImportHighHuf
+                                    ) |> Option.defaultValue "")
                                 ]
                             ]
                         ]
                     ]
-                | _ -> ()
+                    // referencia sor: villanyóra állás
+                    div [ _class "card stat-card p-3 mb-4"; _style "border-top: 4px solid #dee2e6; background: #f8f9fa;" ] [
+                        div [ _class "row g-2 text-center" ] [
+                            div [ _class "col-4" ] [
+                                div [ _class "stat-label" ] [ str "Villanyóra vétel" ]
+                                div [ _class "fw-bold" ] [ str (optF "%.0f kWh" dispImport) ]
+                            ]
+                            div [ _class "col-4" ] [
+                                div [ _class "stat-label" ] [ str "Villanyóra eladás" ]
+                                div [ _class "fw-bold" ] [ str (optF "%.0f kWh" dispExport) ]
+                            ]
+                            div [ _class "col-4" ] [
+                                div [ _class "stat-label" ] [ str "Szaldó alap (%.0f / %.0f)" ]
+                                div [ _class "fw-bold text-muted" ] [ str (sprintf "%.0f / %.0f kWh" bi be) ]
+                            ]
+                        ]
+                    ]
+                | _ ->
+                    div [ _class "alert alert-info" ] [ str "📋 Add meg a villanyóra állását és az időszak alapértékét (szaldó év kezdete) az alábbi formban." ]
             div [ _class "card stat-card p-4 mt-2"; _style "border-top: 4px solid #6c757d;" ] [
                 div [ _class "d-flex justify-content-between align-items-center mb-3" ] [
                     h5 [ _class "fw-bold mb-0" ] [ str "🔧 Villanyóra leolvasás" ]
