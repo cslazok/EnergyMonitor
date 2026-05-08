@@ -304,7 +304,7 @@ module Views =
                         if kwh <= prices.AnnualLimitKwh then kwh * prices.ImportLowHuf
                         else prices.AnnualLimitKwh * prices.ImportLowHuf + (kwh - prices.AnnualLimitKwh) * prices.ImportHighHuf
                     let settlementHuf = Option.map2 (fun ni ee -> ee * prices.ExportHuf - importCost2 ni) netImport2 excessExport2
-                    let periodProduction = Option.map2 (fun cur bas -> max 0.0 (cur - bas)) currentYield yieldAtBaseline
+                    let periodProduction = currentYield
                     let selfConsumed = Option.map2 (fun prod exp -> max 0.0 (prod - exp)) periodProduction pExport
                     let selfValue = selfConsumed |> Option.map (fun sc -> sc * prices.ImportLowHuf)
                     let totalBenefit = Option.map2 (fun sv sh -> sv + sh) selfValue settlementHuf

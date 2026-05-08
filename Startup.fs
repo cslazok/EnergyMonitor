@@ -87,11 +87,7 @@ let webApp =
                 let! prices       = Database.getElectricityPrices()
                 let! roi          = Database.getRoiSettings()
                 let! currentYield = Database.getCurrentInverterYield()
-                let! yieldAtBase  =
-                    match calibration.SetAt with
-                    | Some dt -> Database.getInverterYieldNearDate(dt)
-                    | None    -> System.Threading.Tasks.Task.FromResult(None)
-                return! htmlView (Views.energyPage data calibration prices roi yieldAtBase currentYield) next ctx
+                return! htmlView (Views.energyPage data calibration prices roi None currentYield) next ctx
             })
             route "/api/energy"  >=> (fun next ctx -> task {
                 let! data = Database.getEnergyDataLastHour()
