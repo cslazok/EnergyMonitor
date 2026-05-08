@@ -99,11 +99,16 @@ let webApp =
             | None -> return! text "Nincs Shelly adat" next ctx
             | Some shelly ->
                 let parseFloat (key: string) =
+                    let raw = form.[key].ToString().Trim()
                     let mutable v = 0.0
-                    if System.Double.TryParse(form.[key].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, &v)
-                    then Some v else None
+                    if System.String.IsNullOrWhiteSpace(raw) then None
+                    elif System.Double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, &v) then Some v
+                    elif System.Double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, &v) then Some v
+                    else None
                 match parseFloat "meter_import", parseFloat "meter_export" with
-                | None, _ | _, None -> return! text "Hibás vagy hiányzó érték" next ctx
+                | None, _ | _, None ->
+                    let dbg = form.Keys |> Seq.map (fun k -> sprintf "%s=%s" k (form.[k].ToString())) |> String.concat " | "
+                    return! text (sprintf "Hibás vagy hiányzó érték. Form: %s" dbg) next ctx
                 | Some meterImport, Some meterExport ->
                     let shellyImport = shelly.import_total_kwh |> Option.defaultValue 0.0
                     let shellyExport = shelly.export_total_kwh |> Option.defaultValue 0.0
