@@ -106,9 +106,7 @@ let webApp =
                     elif System.Double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, &v) then Some v
                     else None
                 match parseFloat "meter_import", parseFloat "meter_export" with
-                | None, _ | _, None ->
-                    let dbg = form.Keys |> Seq.map (fun k -> sprintf "%s=%s" k (form.[k].ToString())) |> String.concat " | "
-                    return! text (sprintf "Hibás vagy hiányzó érték. Form: %s" dbg) next ctx
+                | None, _ | _, None -> return! text "Hibás vagy hiányzó érték" next ctx
                 | Some meterImport, Some meterExport ->
                     let shellyImport = shelly.import_total_kwh |> Option.defaultValue 0.0
                     let shellyExport = shelly.export_total_kwh |> Option.defaultValue 0.0

@@ -306,17 +306,20 @@ module Database =
         ExportOffset:    float
         BaselineImport:  float option
         BaselineExport:  float option
+        SetAt:           DateTime option
     }
+
+    let private emptyCalibration = { ImportOffset = 0.0; ExportOffset = 0.0; BaselineImport = None; BaselineExport = None; SetAt = None }
 
     let getMeterCalibration () =
         task {
             match getConnString() with
-            | None -> return { ImportOffset = 0.0; ExportOffset = 0.0; BaselineImport = None; BaselineExport = None }
+            | None -> return emptyCalibration
             | Some connStr ->
                 try
                     use conn = new NpgsqlConnection(connStr)
                     do! conn.OpenAsync()
-                    use cmd = new NpgsqlCommand("SELECT import_offset, export_offset, baseline_import, baseline_export FROM meter_calibration ORDER BY set_at DESC LIMIT 1", conn)
+                    use cmd = new NpgsqlCommand("SELECT import_offset, export_offset, baseline_import, baseline_export, set_at FROM meter_calibration ORDER BY set_at DESC LIMIT 1", conn)
                     use! reader = cmd.ExecuteReaderAsync()
                     if reader.Read() then
                         return {
@@ -324,10 +327,10 @@ module Database =
                             ExportOffset   = reader.GetDouble(1)
                             BaselineImport = if reader.IsDBNull(2) then None else Some (reader.GetDouble(2))
                             BaselineExport = if reader.IsDBNull(3) then None else Some (reader.GetDouble(3))
+                            SetAt          = Some (reader.GetDateTime(4))
                         }
-                    else
-                        return { ImportOffset = 0.0; ExportOffset = 0.0; BaselineImport = None; BaselineExport = None }
-                with _ -> return { ImportOffset = 0.0; ExportOffset = 0.0; BaselineImport = None; BaselineExport = None }
+                    else return emptyCalibration
+                with _ -> return emptyCalibration
         }
 
     let setMeterCalibration (importOffset: float) (exportOffset: float) (baselineImport: float option) (baselineExport: float option) =

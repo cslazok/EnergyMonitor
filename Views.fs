@@ -263,7 +263,12 @@ module Views =
                     ]
                 | _ -> ()
             div [ _class "card stat-card p-4 mt-2"; _style "border-top: 4px solid #6c757d;" ] [
-                h5 [ _class "fw-bold mb-3" ] [ str "🔧 Villanyóra leolvasás" ]
+                div [ _class "d-flex justify-content-between align-items-center mb-3" ] [
+                    h5 [ _class "fw-bold mb-0" ] [ str "🔧 Villanyóra leolvasás" ]
+                    match cal.SetAt with
+                    | Some t -> small [ _class "text-muted" ] [ str (sprintf "Utolsó korrekció: %s" (t.ToLocalTime().ToString("yyyy-MM-dd HH:mm"))) ]
+                    | None   -> small [ _class "text-muted" ] [ str "Még nem volt leolvasás" ]
+                ]
                 p [ _class "text-muted small mb-3" ] [ str "Add meg az óra jelenlegi állását. Az időszak alapértéke opcionális — ha megadod, megmutatja az azóta eltelt deltát." ]
                 form [ _action "/energy/calibrate"; _method "post"; _class "row g-3 align-items-end" ] [
                     div [ _class "col-md-3" ] [
