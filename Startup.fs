@@ -98,20 +98,21 @@ let webApp =
             match latestShelly with
             | None -> return! text "Nincs Shelly adat" next ctx
             | Some shelly ->
-                let meterImport = double (form.["meter_import"].ToString())
-                let meterExport = double (form.["meter_export"].ToString())
-                let shellyImport = shelly.import_total_kwh |> Option.defaultValue 0.0
-                let shellyExport = shelly.export_total_kwh |> Option.defaultValue 0.0
-                let importOffset = meterImport - shellyImport
-                let exportOffset = meterExport - shellyExport
-                let parseOpt (key: string) =
-                    let v = form.[key].ToString()
-                    if System.String.IsNullOrWhiteSpace(v) then None
-                    else Some (double v)
-                let baselineImport = parseOpt "baseline_import"
-                let baselineExport = parseOpt "baseline_export"
-                do! Database.setMeterCalibration importOffset exportOffset baselineImport baselineExport
-                return! redirectTo false "/energy" next ctx
+                let parseFloat (key: string) =
+                    let mutable v = 0.0
+                    if System.Double.TryParse(form.[key].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, &v)
+                    then Some v else None
+                match parseFloat "meter_import", parseFloat "meter_export" with
+                | None, _ | _, None -> return! text "Hibás vagy hiányzó érték" next ctx
+                | Some meterImport, Some meterExport ->
+                    let shellyImport = shelly.import_total_kwh |> Option.defaultValue 0.0
+                    let shellyExport = shelly.export_total_kwh |> Option.defaultValue 0.0
+                    let importOffset = meterImport - shellyImport
+                    let exportOffset = meterExport - shellyExport
+                    let baselineImport = parseFloat "baseline_import"
+                    let baselineExport = parseFloat "baseline_export"
+                    do! Database.setMeterCalibration importOffset exportOffset baselineImport baselineExport
+                    return! redirectTo false "/energy" next ctx
         })
         setStatusCode 404 >=> text "Not Found"
     ]
