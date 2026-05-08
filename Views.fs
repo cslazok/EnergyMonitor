@@ -225,7 +225,16 @@ module Views =
                     let periodImport = dispImport |> Option.map (fun v -> v - bi)
                     let periodExport = dispExport |> Option.map (fun v -> v - be)
                     let periodNet    = Option.map2 (fun ex i -> ex - i) periodExport periodImport
-                    let netHuf       = Option.map2 (fun imp exp -> exportRevenue exp - importCost imp) periodImport periodExport
+                    let netImport    = Option.map2 (fun imp exp -> max 0.0 (imp - exp)) periodImport periodExport
+                    let excessExport = Option.map2 (fun imp exp -> max 0.0 (exp - imp)) periodImport periodExport
+                    let netHuf       = Option.map2 (fun ni ee -> exportRevenue ee - importCost ni) netImport excessExport
+                    let netHufNote   =
+                        Option.map2 (fun ni ee ->
+                            if ni > 0.0 then
+                                if ni <= prices.AnnualLimitKwh then sprintf "%.0f kWh × %.0f Ft/kWh" ni prices.ImportLowHuf
+                                else sprintf "sávos: %.0f+%.0f Ft/kWh" prices.ImportLowHuf prices.ImportHighHuf
+                            else sprintf "+%.1f kWh × %.2f Ft/kWh" ee prices.ExportHuf
+                        ) netImport excessExport
                     // fő kártyák: szaldó év
                     div [ _class "row g-4 mb-4" ] [
                         div [ _class "col-md-3 col-6" ] [
@@ -257,12 +266,7 @@ module Views =
                                 div [ _class (sprintf "display-5 fw-bold %s" (netHuf |> Option.map (fun n -> if n >= 0.0 then "text-success" else "text-danger") |> Option.defaultValue "")) ] [
                                     str (netHuf |> Option.map fmtHuf |> Option.defaultValue "-")
                                 ]
-                                small [ _class "text-muted" ] [
-                                    str (periodImport |> Option.map (fun v ->
-                                        if v <= prices.AnnualLimitKwh then sprintf "%.0f Ft/kWh" prices.ImportLowHuf
-                                        else sprintf "%.0f+%.0f Ft/kWh" prices.ImportLowHuf prices.ImportHighHuf
-                                    ) |> Option.defaultValue "")
-                                ]
+                                small [ _class "text-muted" ] [ str (netHufNote |> Option.defaultValue "") ]
                             ]
                         ]
                     ]
