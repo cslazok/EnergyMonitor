@@ -82,14 +82,31 @@ let webApp =
             route "/api/history" >=> apiHistoryHandler
             route "/api/status"  >=> statusHandler
             route "/energy"      >=> (fun next ctx -> task {
-                let! data = Database.getEnergyDataLastHour()
-                return! htmlView (Views.energyPage data) next ctx
+                let! data       = Database.getEnergyDataLastHour()
+                let! calibration = Database.getMeterCalibration()
+                return! htmlView (Views.energyPage data calibration) next ctx
             })
             route "/api/energy"  >=> (fun next ctx -> task {
                 let! data = Database.getEnergyDataLastHour()
                 return! json data next ctx
             })
         ]
+        POST >=> route "/energy/calibrate" >=> (fun next ctx -> task {
+            let! form = ctx.Request.ReadFormAsync()
+            let! energyData = Database.getEnergyDataLastHour()
+            let latestShelly = energyData |> List.tryHead
+            match latestShelly with
+            | None -> return! text "Nincs Shelly adat" next ctx
+            | Some shelly ->
+                let meterImport = double (form.["meter_import"].ToString())
+                let meterExport = double (form.["meter_export"].ToString())
+                let shellyImport = shelly.import_total_kwh |> Option.defaultValue 0.0
+                let shellyExport = shelly.export_total_kwh |> Option.defaultValue 0.0
+                let importOffset = meterImport - shellyImport
+                let exportOffset = meterExport - shellyExport
+                do! Database.setMeterCalibration importOffset exportOffset
+                return! redirectTo false "/energy" next ctx
+        })
         setStatusCode 404 >=> text "Not Found"
     ]
 

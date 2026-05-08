@@ -195,8 +195,11 @@ module Views =
                 div [ _class "alert alert-warning" ] [ str "Nincs elérhető göngyölt energia adat." ]
         ] |> layout "Energy Monitor - Irányítópult"
 
-    let energyPage (data: Db.Tables.shelly_3em_energy list) =
+    let energyPage (data: Db.Tables.shelly_3em_energy list) (calibration: float * float) =
         let latest = data |> List.tryHead
+        let (importOffset, exportOffset) = calibration
+        let calibrated (v: float option) (offset: float) =
+            v |> Option.map (fun x -> x + offset)
         [
             div [ _class "d-flex justify-content-between align-items-center mb-4" ] [
                 h2 [ _class "fw-bold mb-0" ] [ str "⚡ Energia (kWh)" ]
@@ -207,36 +210,56 @@ module Views =
             match latest with
             | None -> div [ _class "alert alert-warning" ] [ str "Nincs elérhető energia adat." ]
             | Some e ->
+                let dispImport = calibrated e.import_total_kwh importOffset
+                let dispExport = calibrated e.export_total_kwh exportOffset
+                let dispNet    = Option.map2 (fun i ex -> i - ex) dispImport dispExport
                 div [ _class "row g-4 mb-4" ] [
                     div [ _class "col-md-6" ] [
                         div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #ef5350;" ] [
-                            div [ _class "stat-label" ] [ str "Import összesen" ]
-                            div [ _class "display-4 fw-bold text-danger" ] [ str (optF "%.3f kWh" e.import_total_kwh) ]
-                            small [ _class "text-muted" ] [ str "Hálózatból felvett energia" ]
+                            div [ _class "stat-label" ] [ str "Vásárolt (import)" ]
+                            div [ _class "display-4 fw-bold text-danger" ] [ str (optF "%.1f kWh" dispImport) ]
+                            small [ _class "text-muted" ] [ str (sprintf "Shelly: %s kWh" (optF "%.3f" e.import_total_kwh)) ]
                         ]
                     ]
                     div [ _class "col-md-6" ] [
                         div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #66bb6a;" ] [
-                            div [ _class "stat-label" ] [ str "Export összesen" ]
-                            div [ _class "display-4 fw-bold text-success" ] [ str (optF "%.3f kWh" e.export_total_kwh) ]
-                            small [ _class "text-muted" ] [ str "Hálózatba visszatáplált energia" ]
+                            div [ _class "stat-label" ] [ str "Eladott (export)" ]
+                            div [ _class "display-4 fw-bold text-success" ] [ str (optF "%.1f kWh" dispExport) ]
+                            small [ _class "text-muted" ] [ str (sprintf "Shelly: %s kWh" (optF "%.3f" e.export_total_kwh)) ]
                         ]
                     ]
                     div [ _class "col-md-6" ] [
                         div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #42a5f5;" ] [
                             div [ _class "stat-label" ] [ str "Nettó egyenleg" ]
-                            div [ _class "display-4 fw-bold text-primary" ] [ str (optF "%.3f kWh" e.net_total_kwh) ]
-                            small [ _class "text-muted" ] [ str "Negatív = többet termeltél, mint fogyasztottál" ]
+                            div [ _class "display-4 fw-bold text-primary" ] [ str (optF "%.1f kWh" dispNet) ]
+                            small [ _class "text-muted" ] [ str "Negatív = többet eladtál, mint vettél" ]
                         ]
                     ]
                     div [ _class "col-md-6" ] [
                         div [ _class "card stat-card p-4 text-center"; _style "border-top: 4px solid #ab47bc;" ] [
-                            div [ _class "stat-label" ] [ str "Összes aktív energia" ]
-                            div [ _class "display-4 fw-bold" ] [ str (optF "%.3f kWh" e.total_act) ]
-                            small [ _class "text-muted" ] [ str "Teljes aktív fogyasztás" ]
+                            div [ _class "stat-label" ] [ str "Korrekció" ]
+                            div [ _class "display-4 fw-bold text-muted" ] [ str (sprintf "%+.1f / %+.1f kWh" importOffset exportOffset) ]
+                            small [ _class "text-muted" ] [ str "import / export eltolás" ]
                         ]
                     ]
                 ]
+            div [ _class "card stat-card p-4 mt-2"; _style "border-top: 4px solid #f59e0b;" ] [
+                h5 [ _class "fw-bold mb-3" ] [ str "🔧 Villanyóra leolvasás" ]
+                p [ _class "text-muted small mb-3" ] [ str "Add meg az óra jelenlegi állását — a rendszer kiszámolja a korrekciót a Shelly értékéhez képest." ]
+                form [ _action "/energy/calibrate"; _method "post"; _class "row g-3 align-items-end" ] [
+                    div [ _class "col-md-4" ] [
+                        label [ _class "form-label small fw-bold" ] [ str "Vétel (import) kWh" ]
+                        input [ _type "number"; _name "meter_import"; _class "form-control"; _step "0.001"; _placeholder "29248.000" ]
+                    ]
+                    div [ _class "col-md-4" ] [
+                        label [ _class "form-label small fw-bold" ] [ str "Betáplálás (export) kWh" ]
+                        input [ _type "number"; _name "meter_export"; _class "form-control"; _step "0.001"; _placeholder "28499.000" ]
+                    ]
+                    div [ _class "col-md-4" ] [
+                        button [ _type "submit"; _class "btn btn-warning w-100 fw-bold" ] [ str "Korrekció mentése" ]
+                    ]
+                ]
+            ]
         ] |> layout "Energy Monitor - Energia"
 
     let historyTable (data: Db.Tables.shelly_3em_live list) =

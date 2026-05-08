@@ -300,3 +300,34 @@ module Database =
                     return results |> Seq.toList
                 with _ -> return []
         }
+
+    let getMeterCalibration () =
+        task {
+            match getConnString() with
+            | None -> return (0.0, 0.0)
+            | Some connStr ->
+                try
+                    use conn = new NpgsqlConnection(connStr)
+                    do! conn.OpenAsync()
+                    use cmd = new NpgsqlCommand("SELECT import_offset, export_offset FROM meter_calibration ORDER BY set_at DESC LIMIT 1", conn)
+                    use! reader = cmd.ExecuteReaderAsync()
+                    if reader.Read() then
+                        return (reader.GetDouble(0), reader.GetDouble(1))
+                    else
+                        return (0.0, 0.0)
+                with _ -> return (0.0, 0.0)
+        }
+
+    let setMeterCalibration (importOffset: float) (exportOffset: float) =
+        task {
+            match getConnString() with
+            | None -> ()
+            | Some connStr ->
+                use conn = new NpgsqlConnection(connStr)
+                do! conn.OpenAsync()
+                use cmd = new NpgsqlCommand("INSERT INTO meter_calibration (import_offset, export_offset) VALUES (@i, @e)", conn)
+                cmd.Parameters.AddWithValue("@i", importOffset) |> ignore
+                cmd.Parameters.AddWithValue("@e", exportOffset) |> ignore
+                let! _ = cmd.ExecuteNonQueryAsync()
+                ()
+        }
