@@ -142,9 +142,14 @@ let webApp =
                 if System.Double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, &v) then Some v
                 elif System.Double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, &v) then Some v
                 else None
+            let parseDate (key: string) =
+                let raw = form.[key].ToString().Trim()
+                let mutable dt = System.DateTime.MinValue
+                if System.DateTime.TryParse(raw, &dt) then Some dt else None
             match parseFloat "investment_huf" with
             | Some inv ->
-                do! Database.setRoiSettings inv
+                let szaldoStart = parseDate "szaldo_start"
+                do! Database.setRoiSettings inv szaldoStart
                 return! redirectTo false "/energy" next ctx
             | None -> return! text "Hibás érték" next ctx
         })

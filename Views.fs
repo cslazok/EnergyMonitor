@@ -308,8 +308,11 @@ module Views =
                     let selfConsumed = Option.map2 (fun prod exp -> max 0.0 (prod - exp)) periodProduction pExport
                     let selfValue = selfConsumed |> Option.map (fun sc -> sc * prices.ImportLowHuf)
                     let totalBenefit = Option.map2 (fun sv sh -> sv + sh) selfValue settlementHuf
-                    let daysElapsed = (DateTime.UtcNow - baselineDate).TotalDays
-                    let annualBenefit = totalBenefit |> Option.map (fun b -> if daysElapsed > 0.0 then b / daysElapsed * 365.0 else 0.0)
+                    let daysElapsed =
+                        match roi.SzaldoStart with
+                        | Some d -> (DateTime.UtcNow - d).TotalDays
+                        | None   -> (DateTime.UtcNow - baselineDate).TotalDays
+                    let annualBenefit = totalBenefit |> Option.map (fun b -> if daysElapsed >= 7.0 then b / daysElapsed * 365.0 else 0.0)
                     let paybackYears = annualBenefit |> Option.bind (fun ab -> if roi.InvestmentHuf > 0.0 && ab > 0.0 then Some (roi.InvestmentHuf / ab) else None)
                     div [ _class "card stat-card p-4 mb-3"; _style "border-top: 4px solid #f59e0b; background: linear-gradient(135deg,#fffbeb,#fefce8);" ] [
                         h5 [ _class "fw-bold mb-3" ] [ str "💰 Megtérülés kalkulátor" ]
@@ -362,6 +365,13 @@ module Views =
                             div [ _class "col-md-4" ] [
                                 label [ _class "form-label small fw-bold" ] [ str (sprintf "Beruházás összege (Ft)%s" (if roi.InvestmentHuf > 0.0 then sprintf " — jelenleg %.0f" roi.InvestmentHuf else "")) ]
                                 input [ _type "number"; _name "investment_huf"; _class "form-control"; _step "1000"; _placeholder "pl. 2500000" ]
+                            ]
+                            div [ _class "col-md-3" ] [
+                                label [ _class "form-label small fw-bold" ] [
+                                    str (sprintf "Szaldó év kezdete%s" (roi.SzaldoStart |> Option.map (fun d -> sprintf " — %s" (d.ToString("yyyy-MM-dd"))) |> Option.defaultValue ""))
+                                ]
+                                input [ _type "date"; _name "szaldo_start"; _class "form-control";
+                                        _value (roi.SzaldoStart |> Option.map (fun d -> d.ToString("yyyy-MM-dd")) |> Option.defaultValue "") ]
                             ]
                             div [ _class "col-md-2" ] [
                                 button [ _type "submit"; _class "btn btn-warning w-100 fw-bold" ] [ str "Mentés" ]

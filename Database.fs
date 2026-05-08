@@ -390,9 +390,9 @@ module Database =
                 ()
         }
 
-    type RoiSettings = { InvestmentHuf: float; SetAt: DateTime option }
+    type RoiSettings = { InvestmentHuf: float; SzaldoStart: DateTime option; SetAt: DateTime option }
 
-    let private defaultRoi = { InvestmentHuf = 0.0; SetAt = None }
+    let private defaultRoi = { InvestmentHuf = 0.0; SzaldoStart = None; SetAt = None }
 
     let getRoiSettings () =
         task {
@@ -402,23 +402,28 @@ module Database =
                 try
                     use conn = new NpgsqlConnection(connStr)
                     do! conn.OpenAsync()
-                    use cmd = new NpgsqlCommand("SELECT investment_huf, set_at FROM roi_settings ORDER BY set_at DESC LIMIT 1", conn)
+                    use cmd = new NpgsqlCommand("SELECT investment_huf, szaldo_start, set_at FROM roi_settings ORDER BY set_at DESC LIMIT 1", conn)
                     use! reader = cmd.ExecuteReaderAsync()
                     if reader.Read() then
-                        return { InvestmentHuf = reader.GetDouble(0); SetAt = Some (reader.GetDateTime(1)) }
+                        return {
+                            InvestmentHuf = reader.GetDouble(0)
+                            SzaldoStart   = if reader.IsDBNull(1) then None else Some (reader.GetDateTime(1))
+                            SetAt         = Some (reader.GetDateTime(2))
+                        }
                     else return defaultRoi
                 with _ -> return defaultRoi
         }
 
-    let setRoiSettings (investmentHuf: float) =
+    let setRoiSettings (investmentHuf: float) (szaldoStart: DateTime option) =
         task {
             match getConnString() with
             | None -> ()
             | Some connStr ->
                 use conn = new NpgsqlConnection(connStr)
                 do! conn.OpenAsync()
-                use cmd = new NpgsqlCommand("INSERT INTO roi_settings (investment_huf) VALUES (@i)", conn)
+                use cmd = new NpgsqlCommand("INSERT INTO roi_settings (investment_huf, szaldo_start) VALUES (@i, @s)", conn)
                 cmd.Parameters.AddWithValue("@i", investmentHuf) |> ignore
+                cmd.Parameters.AddWithValue("@s", szaldoStart |> Option.map box |> Option.defaultValue (box DBNull.Value)) |> ignore
                 let! _ = cmd.ExecuteNonQueryAsync()
                 ()
         }
