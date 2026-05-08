@@ -200,7 +200,7 @@ module Views =
         let s = if abs >= 1000.0 then sprintf "%s %03.0f" (sprintf "%.0f" (System.Math.Floor(abs / 1000.0))) (abs % 1000.0) else sprintf "%.0f" abs
         if v < 0.0 then sprintf "-%s Ft" s else sprintf "+%s Ft" s
 
-    let energyPage (data: Db.Tables.shelly_3em_energy list) (calibration: Database.MeterCalibration) (prices: Database.ElectricityPrices) =
+    let energyPage (data: Db.Tables.shelly_3em_energy list) (calibration: Database.MeterCalibration) (prices: Database.ElectricityPrices) (roi: Database.RoiSettings) (yieldAtBaseline: float option) (currentYield: float option) =
         let latest = data |> List.tryHead
         let cal = calibration
         let calibrated (v: float option) (offset: float) = v |> Option.map (fun x -> x + offset)
@@ -289,6 +289,87 @@ module Views =
                     ]
                 | _ ->
                     div [ _class "alert alert-info" ] [ str "📋 Add meg a villanyóra állását és az időszak alapértékét (szaldó év kezdete) az alábbi formban." ]
+            // ROI kalkulátor
+            match latest with
+            | Some e ->
+                let dispImport2 = calibrated e.import_total_kwh calibration.ImportOffset
+                let dispExport2 = calibrated e.export_total_kwh calibration.ExportOffset
+                match calibration.BaselineImport, calibration.BaselineExport, calibration.SetAt with
+                | Some bi, Some be, Some baselineDate ->
+                    let pImport = dispImport2 |> Option.map (fun v -> v - bi)
+                    let pExport = dispExport2 |> Option.map (fun v -> v - be)
+                    let netImport2    = Option.map2 (fun imp exp -> max 0.0 (imp - exp)) pImport pExport
+                    let excessExport2 = Option.map2 (fun imp exp -> max 0.0 (exp - imp)) pImport pExport
+                    let importCost2 kwh =
+                        if kwh <= prices.AnnualLimitKwh then kwh * prices.ImportLowHuf
+                        else prices.AnnualLimitKwh * prices.ImportLowHuf + (kwh - prices.AnnualLimitKwh) * prices.ImportHighHuf
+                    let settlementHuf = Option.map2 (fun ni ee -> ee * prices.ExportHuf - importCost2 ni) netImport2 excessExport2
+                    let periodProduction = Option.map2 (fun cur bas -> max 0.0 (cur - bas)) currentYield yieldAtBaseline
+                    let selfConsumed = Option.map2 (fun prod exp -> max 0.0 (prod - exp)) periodProduction pExport
+                    let selfValue = selfConsumed |> Option.map (fun sc -> sc * prices.ImportLowHuf)
+                    let totalBenefit = Option.map2 (fun sv sh -> sv + sh) selfValue settlementHuf
+                    let daysElapsed = (DateTime.UtcNow - baselineDate).TotalDays
+                    let annualBenefit = totalBenefit |> Option.map (fun b -> if daysElapsed > 0.0 then b / daysElapsed * 365.0 else 0.0)
+                    let paybackYears = annualBenefit |> Option.bind (fun ab -> if roi.InvestmentHuf > 0.0 && ab > 0.0 then Some (roi.InvestmentHuf / ab) else None)
+                    div [ _class "card stat-card p-4 mb-3"; _style "border-top: 4px solid #f59e0b; background: linear-gradient(135deg,#fffbeb,#fefce8);" ] [
+                        h5 [ _class "fw-bold mb-3" ] [ str "💰 Megtérülés kalkulátor" ]
+                        div [ _class "row g-3 text-center mb-3" ] [
+                            div [ _class "col-md-3 col-6" ] [
+                                div [ _class "stat-label" ] [ str "Termelt (szaldó év)" ]
+                                div [ _class "kwh-value text-warning" ] [ str (periodProduction |> optF "%.1f kWh") ]
+                            ]
+                            div [ _class "col-md-3 col-6" ] [
+                                div [ _class "stat-label" ] [ str "Önfogyasztás" ]
+                                div [ _class "kwh-value text-success" ] [ str (selfConsumed |> optF "%.1f kWh") ]
+                                small [ _class "text-muted" ] [ str (selfValue |> Option.map (fun v -> sprintf "≈ %.0f Ft" v) |> Option.defaultValue "-") ]
+                            ]
+                            div [ _class "col-md-3 col-6" ] [
+                                div [ _class "stat-label" ] [ str "Szaldó egyenleg" ]
+                                div [ _class (settlementHuf |> Option.map (fun n -> if n >= 0.0 then "kwh-value text-success" else "kwh-value text-danger") |> Option.defaultValue "kwh-value") ] [
+                                    str (settlementHuf |> Option.map fmtHuf |> Option.defaultValue "-")
+                                ]
+                            ]
+                            div [ _class "col-md-3 col-6" ] [
+                                div [ _class "stat-label" ] [ str "Összes megtakarítás" ]
+                                div [ _class (totalBenefit |> Option.map (fun n -> if n >= 0.0 then "kwh-value text-success" else "kwh-value text-danger") |> Option.defaultValue "kwh-value") ] [
+                                    str (totalBenefit |> Option.map fmtHuf |> Option.defaultValue "-")
+                                ]
+                                small [ _class "text-muted" ] [ str (sprintf "%.0f nap alatt" daysElapsed) ]
+                            ]
+                        ]
+                        hr [ _class "my-2" ]
+                        div [ _class "row g-3 text-center" ] [
+                            div [ _class "col-md-4 col-6" ] [
+                                div [ _class "stat-label" ] [ str "Beruházás" ]
+                                div [ _class "kwh-value" ] [
+                                    str (if roi.InvestmentHuf > 0.0 then fmtHuf (-roi.InvestmentHuf) else "—  add meg lent")
+                                ]
+                            ]
+                            div [ _class "col-md-4 col-6" ] [
+                                div [ _class "stat-label" ] [ str "Becsült éves megtakarítás" ]
+                                div [ _class "kwh-value text-success" ] [
+                                    str (annualBenefit |> Option.map (fun a -> sprintf "%.0f Ft/év" a) |> Option.defaultValue "-")
+                                ]
+                            ]
+                            div [ _class "col-md-4 col-12" ] [
+                                div [ _class "stat-label" ] [ str "Becsült megtérülés" ]
+                                div [ _class "display-5 fw-bold text-warning" ] [
+                                    str (paybackYears |> Option.map (fun y -> sprintf "%.1f év" y) |> Option.defaultValue "—")
+                                ]
+                            ]
+                        ]
+                        form [ _action "/energy/roi"; _method "post"; _class "row g-2 align-items-end mt-2" ] [
+                            div [ _class "col-md-4" ] [
+                                label [ _class "form-label small fw-bold" ] [ str (sprintf "Beruházás összege (Ft)%s" (if roi.InvestmentHuf > 0.0 then sprintf " — jelenleg %.0f" roi.InvestmentHuf else "")) ]
+                                input [ _type "number"; _name "investment_huf"; _class "form-control"; _step "1000"; _placeholder "pl. 2500000" ]
+                            ]
+                            div [ _class "col-md-2" ] [
+                                button [ _type "submit"; _class "btn btn-warning w-100 fw-bold" ] [ str "Mentés" ]
+                            ]
+                        ]
+                    ]
+                | _ -> ()
+            | None -> ()
             div [ _class "card stat-card p-4 mt-2"; _style "border-top: 4px solid #6c757d;" ] [
                 div [ _class "d-flex justify-content-between align-items-center mb-3" ] [
                     h5 [ _class "fw-bold mb-0" ] [ str "🔧 Villanyóra leolvasás" ]

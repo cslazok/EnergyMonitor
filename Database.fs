@@ -389,3 +389,69 @@ module Database =
                 let! _ = cmd.ExecuteNonQueryAsync()
                 ()
         }
+
+    type RoiSettings = { InvestmentHuf: float; SetAt: DateTime option }
+
+    let private defaultRoi = { InvestmentHuf = 0.0; SetAt = None }
+
+    let getRoiSettings () =
+        task {
+            match getConnString() with
+            | None -> return defaultRoi
+            | Some connStr ->
+                try
+                    use conn = new NpgsqlConnection(connStr)
+                    do! conn.OpenAsync()
+                    use cmd = new NpgsqlCommand("SELECT investment_huf, set_at FROM roi_settings ORDER BY set_at DESC LIMIT 1", conn)
+                    use! reader = cmd.ExecuteReaderAsync()
+                    if reader.Read() then
+                        return { InvestmentHuf = reader.GetDouble(0); SetAt = Some (reader.GetDateTime(1)) }
+                    else return defaultRoi
+                with _ -> return defaultRoi
+        }
+
+    let setRoiSettings (investmentHuf: float) =
+        task {
+            match getConnString() with
+            | None -> ()
+            | Some connStr ->
+                use conn = new NpgsqlConnection(connStr)
+                do! conn.OpenAsync()
+                use cmd = new NpgsqlCommand("INSERT INTO roi_settings (investment_huf) VALUES (@i)", conn)
+                cmd.Parameters.AddWithValue("@i", investmentHuf) |> ignore
+                let! _ = cmd.ExecuteNonQueryAsync()
+                ()
+        }
+
+    let getInverterYieldNearDate (dt: DateTime) =
+        task {
+            match getConnString() with
+            | None -> return None
+            | Some connStr ->
+                try
+                    use conn = new NpgsqlConnection(connStr)
+                    do! conn.OpenAsync()
+                    use cmd = new NpgsqlCommand(
+                        "SELECT total_yield FROM inverter_live WHERE ts >= @dt AND total_yield IS NOT NULL AND total_yield > 0 ORDER BY ts ASC LIMIT 1", conn)
+                    cmd.Parameters.AddWithValue("@dt", dt) |> ignore
+                    use! reader = cmd.ExecuteReaderAsync()
+                    if reader.Read() && not (reader.IsDBNull(0)) then return Some (reader.GetDouble(0))
+                    else return None
+                with _ -> return None
+        }
+
+    let getCurrentInverterYield () =
+        task {
+            match getConnString() with
+            | None -> return None
+            | Some connStr ->
+                try
+                    use conn = new NpgsqlConnection(connStr)
+                    do! conn.OpenAsync()
+                    use cmd = new NpgsqlCommand(
+                        "SELECT total_yield FROM inverter_live WHERE total_yield IS NOT NULL AND total_yield > 0 ORDER BY ts DESC LIMIT 1", conn)
+                    use! reader = cmd.ExecuteReaderAsync()
+                    if reader.Read() && not (reader.IsDBNull(0)) then return Some (reader.GetDouble(0))
+                    else return None
+                with _ -> return None
+        }

@@ -82,10 +82,16 @@ let webApp =
             route "/api/history" >=> apiHistoryHandler
             route "/api/status"  >=> statusHandler
             route "/energy"      >=> (fun next ctx -> task {
-                let! data        = Database.getEnergyDataLastHour()
-                let! calibration = Database.getMeterCalibration()
-                let! prices      = Database.getElectricityPrices()
-                return! htmlView (Views.energyPage data calibration prices) next ctx
+                let! data         = Database.getEnergyDataLastHour()
+                let! calibration  = Database.getMeterCalibration()
+                let! prices       = Database.getElectricityPrices()
+                let! roi          = Database.getRoiSettings()
+                let! currentYield = Database.getCurrentInverterYield()
+                let! yieldAtBase  =
+                    match calibration.SetAt with
+                    | Some dt -> Database.getInverterYieldNearDate(dt)
+                    | None    -> System.Threading.Tasks.Task.FromResult(None)
+                return! htmlView (Views.energyPage data calibration prices roi yieldAtBase currentYield) next ctx
             })
             route "/api/energy"  >=> (fun next ctx -> task {
                 let! data = Database.getEnergyDataLastHour()
@@ -131,6 +137,20 @@ let webApp =
                 do! Database.setElectricityPrices { ImportLowHuf = a; ImportHighHuf = b; ExportHuf = c; AnnualLimitKwh = d }
                 return! redirectTo false "/energy" next ctx
             | _ -> return! text "Hibás érték" next ctx
+        })
+        POST >=> route "/energy/roi" >=> (fun next ctx -> task {
+            let! form = ctx.Request.ReadFormAsync()
+            let parseFloat (key: string) =
+                let raw = form.[key].ToString().Trim()
+                let mutable v = 0.0
+                if System.Double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, &v) then Some v
+                elif System.Double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, &v) then Some v
+                else None
+            match parseFloat "investment_huf" with
+            | Some inv ->
+                do! Database.setRoiSettings inv
+                return! redirectTo false "/energy" next ctx
+            | None -> return! text "Hibás érték" next ctx
         })
         setStatusCode 404 >=> text "Not Found"
     ]
