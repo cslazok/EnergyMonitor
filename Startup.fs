@@ -82,7 +82,7 @@ let webApp =
             route "/api/history" >=> apiHistoryHandler
             route "/api/status"  >=> statusHandler
             route "/energy"      >=> (fun next ctx -> task {
-                let! data       = Database.getEnergyDataLastHour()
+                let! data        = Database.getEnergyDataLastHour()
                 let! calibration = Database.getMeterCalibration()
                 return! htmlView (Views.energyPage data calibration) next ctx
             })
@@ -104,7 +104,13 @@ let webApp =
                 let shellyExport = shelly.export_total_kwh |> Option.defaultValue 0.0
                 let importOffset = meterImport - shellyImport
                 let exportOffset = meterExport - shellyExport
-                do! Database.setMeterCalibration importOffset exportOffset
+                let parseOpt (key: string) =
+                    let v = form.[key].ToString()
+                    if System.String.IsNullOrWhiteSpace(v) then None
+                    else Some (double v)
+                let baselineImport = parseOpt "baseline_import"
+                let baselineExport = parseOpt "baseline_export"
+                do! Database.setMeterCalibration importOffset exportOffset baselineImport baselineExport
                 return! redirectTo false "/energy" next ctx
         })
         setStatusCode 404 >=> text "Not Found"

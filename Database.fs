@@ -301,33 +301,47 @@ module Database =
                 with _ -> return []
         }
 
+    type MeterCalibration = {
+        ImportOffset:    float
+        ExportOffset:    float
+        BaselineImport:  float option
+        BaselineExport:  float option
+    }
+
     let getMeterCalibration () =
         task {
             match getConnString() with
-            | None -> return (0.0, 0.0)
+            | None -> return { ImportOffset = 0.0; ExportOffset = 0.0; BaselineImport = None; BaselineExport = None }
             | Some connStr ->
                 try
                     use conn = new NpgsqlConnection(connStr)
                     do! conn.OpenAsync()
-                    use cmd = new NpgsqlCommand("SELECT import_offset, export_offset FROM meter_calibration ORDER BY set_at DESC LIMIT 1", conn)
+                    use cmd = new NpgsqlCommand("SELECT import_offset, export_offset, baseline_import, baseline_export FROM meter_calibration ORDER BY set_at DESC LIMIT 1", conn)
                     use! reader = cmd.ExecuteReaderAsync()
                     if reader.Read() then
-                        return (reader.GetDouble(0), reader.GetDouble(1))
+                        return {
+                            ImportOffset   = reader.GetDouble(0)
+                            ExportOffset   = reader.GetDouble(1)
+                            BaselineImport = if reader.IsDBNull(2) then None else Some (reader.GetDouble(2))
+                            BaselineExport = if reader.IsDBNull(3) then None else Some (reader.GetDouble(3))
+                        }
                     else
-                        return (0.0, 0.0)
-                with _ -> return (0.0, 0.0)
+                        return { ImportOffset = 0.0; ExportOffset = 0.0; BaselineImport = None; BaselineExport = None }
+                with _ -> return { ImportOffset = 0.0; ExportOffset = 0.0; BaselineImport = None; BaselineExport = None }
         }
 
-    let setMeterCalibration (importOffset: float) (exportOffset: float) =
+    let setMeterCalibration (importOffset: float) (exportOffset: float) (baselineImport: float option) (baselineExport: float option) =
         task {
             match getConnString() with
             | None -> ()
             | Some connStr ->
                 use conn = new NpgsqlConnection(connStr)
                 do! conn.OpenAsync()
-                use cmd = new NpgsqlCommand("INSERT INTO meter_calibration (import_offset, export_offset) VALUES (@i, @e)", conn)
-                cmd.Parameters.AddWithValue("@i", importOffset) |> ignore
-                cmd.Parameters.AddWithValue("@e", exportOffset) |> ignore
+                use cmd = new NpgsqlCommand("INSERT INTO meter_calibration (import_offset, export_offset, baseline_import, baseline_export) VALUES (@i, @e, @bi, @be)", conn)
+                cmd.Parameters.AddWithValue("@i",  importOffset) |> ignore
+                cmd.Parameters.AddWithValue("@e",  exportOffset) |> ignore
+                cmd.Parameters.AddWithValue("@bi", baselineImport |> Option.map box |> Option.defaultValue (box DBNull.Value)) |> ignore
+                cmd.Parameters.AddWithValue("@be", baselineExport |> Option.map box |> Option.defaultValue (box DBNull.Value)) |> ignore
                 let! _ = cmd.ExecuteNonQueryAsync()
                 ()
         }
