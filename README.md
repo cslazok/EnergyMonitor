@@ -2,7 +2,7 @@
 
 A household energy monitoring web application written in **F#**. Displays real-time data from a Shelly 3EM three-phase smart meter and a Huawei SUN2000 solar inverter system. The goal is to determine how long it takes for a battery storage expansion to pay for itself under the current net-metering tariff structure.
 
-**[→ Live Demo](https://cslazok.github.io/EnergyMonitor/)** — runs with simulated data, no database required
+**[→ Live App](https://fsharp.dnchome.uk)** — live data from real hardware &nbsp;|&nbsp; **[→ Demo](https://cslazok.github.io/EnergyMonitor/)** — simulated data, no database required
 
 ## Motivation
 
