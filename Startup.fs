@@ -7,6 +7,17 @@ open Microsoft.Extensions.Hosting
 open Giraffe
 open EnergyMonitor
 
+let requiresBasicAuth : HttpHandler =
+    fun next ctx ->
+        let authHeader = ctx.Request.Headers.["Authorization"].ToString()
+        let password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") |> Option.ofObj |> Option.defaultValue ""
+        let expected = "Basic " + Convert.ToBase64String(Text.Encoding.UTF8.GetBytes("admin:" + password))
+        if password <> "" && authHeader = expected then
+            next ctx
+        else
+            ctx.Response.Headers["WWW-Authenticate"] <- "Basic realm=\"EnergyMonitor Admin\""
+            (setStatusCode 401 >=> text "Unauthorized") next ctx
+
 let dashboardHandler : HttpHandler =
     fun (next : HttpFunc) (ctx : Microsoft.AspNetCore.Http.HttpContext) ->
         task {
@@ -94,7 +105,7 @@ let webApp =
                 return! json data next ctx
             })
         ]
-        POST >=> route "/energy/calibrate" >=> (fun next ctx -> task {
+        POST >=> requiresBasicAuth >=> route "/energy/calibrate" >=> (fun next ctx -> task {
             let! form = ctx.Request.ReadFormAsync()
             let! energyData = Database.getEnergyDataLastHour()
             let latestShelly = energyData |> List.tryHead
@@ -120,7 +131,7 @@ let webApp =
                     do! Database.setMeterCalibration importOffset exportOffset baselineImport baselineExport
                     return! redirectTo false "/energy" next ctx
         })
-        POST >=> route "/energy/prices" >=> (fun next ctx -> task {
+        POST >=> requiresBasicAuth >=> route "/energy/prices" >=> (fun next ctx -> task {
             let! form = ctx.Request.ReadFormAsync()
             let parseFloat (key: string) =
                 let raw = form.[key].ToString().Trim()
@@ -134,7 +145,7 @@ let webApp =
                 return! redirectTo false "/energy" next ctx
             | _ -> return! text "Hibás érték" next ctx
         })
-        POST >=> route "/energy/roi" >=> (fun next ctx -> task {
+        POST >=> requiresBasicAuth >=> route "/energy/roi" >=> (fun next ctx -> task {
             let! form = ctx.Request.ReadFormAsync()
             let parseFloat (key: string) =
                 let raw = form.[key].ToString().Trim()
