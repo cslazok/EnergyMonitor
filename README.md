@@ -55,32 +55,21 @@ Huawei SUN2000 ──→ Modbus TCP ──→ ModbusReaderService ────�
 
 ## Setup
 
-1. Create a `.env` file with your PostgreSQL connection string:
-   ```
-   DB_CONNECTION=Host=...;Port=5432;Database=...;Username=...;Password=...
-   ```
+See **[SETUP.md](SETUP.md)** for the full installation guide: database schema, configuration, MQTT topics, meter calibration, and systemd service setup.
 
-2. Configure inverter and MQTT settings in `appsettings.json`:
-   ```json
-   "Inverter": {
-     "Ip": "192.168.x.x",
-     "Port": 502,
-     "UnitId": 1,
-     "PollIntervalSeconds": 10
-   },
-   "Mqtt": {
-     "Broker": "192.168.x.x",
-     "Port": 1883,
-     "InverterTopic": "energymonitor/inverter"
-   }
-   ```
+Quick start:
 
-3. Run:
-   ```bash
-   dotnet run
-   ```
+```bash
+# 1. Create .env with your PostgreSQL connection string
+echo "DB_CONNECTION=Host=...;Port=5432;Database=solar_data;Username=solar;Password=..." > .env
 
-> Without a database the app starts in **demo mode** with simulated data.
+# 2. Configure Inverter and MQTT in appsettings.json
+
+# 3. Run
+dotnet run
+```
+
+> Without a `.env` file the app starts in **demo mode** with simulated data.
 
 ## Pages and API
 
@@ -107,6 +96,7 @@ Huawei SUN2000 ──→ Modbus TCP ──→ ModbusReaderService ────�
 | [Giraffe.ViewEngine](https://github.com/giraffe-fsharp/Giraffe) | Server-side HTML rendering in F# |
 | [FluentModbus](https://github.com/Apollo3zehn/FluentModbus) | Modbus TCP client for inverter communication |
 | [MQTTnet](https://github.com/dotnet/MQTTnet) | MQTT client (Shelly subscriber + inverter publisher) |
+| [SqlHydra.Query](https://github.com/JordanMarr/SqlHydra) | Type-safe generated DB types |
 | [Npgsql](https://github.com/npgsql/npgsql) | .NET PostgreSQL driver |
 | [DotNetEnv](https://github.com/tonerdo/dotnet-env) | `.env` file loading |
 
