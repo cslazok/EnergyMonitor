@@ -177,7 +177,7 @@ module Database =
                 ()
         }
 
-    let insertInverterLive (connected: bool) (data: System.Collections.Generic.IDictionary<string, obj>) (houseConsumption: float option) =
+    let insertInverterLive (connected: bool) (data: System.Collections.Generic.IDictionary<string, obj>) (houseConsumption: float option) (houseA: float option) (houseB: float option) (houseC: float option) =
         task {
             match getConnString() with
             | None -> ()
@@ -191,13 +191,15 @@ module Database =
                      daily_yield, total_yield, battery_soc, battery_power,
                      temperature, grid_frequency, power_factor, status,
                      l1_voltage, l1_current, l2_voltage, l2_current, l3_voltage, l3_current,
-                     inverter_consumption, pv1_power, pv2_power, house_consumption_w)
+                     inverter_consumption, pv1_power, pv2_power, house_consumption_w,
+                     house_consumption_a_w, house_consumption_b_w, house_consumption_c_w)
                     VALUES (@ts, @connected, @active_power, @pv_total_power,
                             @pv1_voltage, @pv1_current, @pv2_voltage, @pv2_current,
                             @daily_yield, @total_yield, @battery_soc, @battery_power,
                             @temperature, @grid_frequency, @power_factor, @status,
                             @l1_voltage, @l1_current, @l2_voltage, @l2_current, @l3_voltage, @l3_current,
-                            @inverter_consumption, @pv1_power, @pv2_power, @house_consumption_w)
+                            @inverter_consumption, @pv1_power, @pv2_power, @house_consumption_w,
+                            @house_consumption_a_w, @house_consumption_b_w, @house_consumption_c_w)
                 """
                 use cmd = new NpgsqlCommand(sql, conn)
                 let p (n: string) (v: obj) = cmd.Parameters.AddWithValue(n, v) |> ignore
@@ -230,7 +232,11 @@ module Database =
                 p "@inverter_consumption" (f "inverterConsumption")
                 p "@pv1_power"            (f "pv1Power")
                 p "@pv2_power"            (f "pv2Power")
-                p "@house_consumption_w"  (houseConsumption |> Option.map box |> Option.defaultValue (box DBNull.Value))
+                let optBox o = o |> Option.map box |> Option.defaultValue (box DBNull.Value)
+                p "@house_consumption_w"   (optBox houseConsumption)
+                p "@house_consumption_a_w" (optBox houseA)
+                p "@house_consumption_b_w" (optBox houseB)
+                p "@house_consumption_c_w" (optBox houseC)
                 let! _ = cmd.ExecuteNonQueryAsync()
                 ()
         }
@@ -395,23 +401,30 @@ module Database =
 
     let private defaultRoi = { InvestmentHuf = 0.0; SzaldoStart = None; SetAt = None }
 
+    type ShellyPowers = {
+        ImportPower: float option
+        ExportPower: float option
+        AActPower:   float option
+        BActPower:   float option
+        CActPower:   float option
+    }
+
     let getLatestShellyPower () =
         task {
             match getConnString() with
-            | None -> return (None, None)
+            | None -> return { ImportPower = None; ExportPower = None; AActPower = None; BActPower = None; CActPower = None }
             | Some connStr ->
                 try
                     use conn = new NpgsqlConnection(connStr)
                     do! conn.OpenAsync()
                     use cmd = new NpgsqlCommand(
-                        "SELECT import_power, export_power FROM shelly_3em_live ORDER BY ts DESC LIMIT 1", conn)
+                        "SELECT import_power, export_power, a_act_power, b_act_power, c_act_power FROM shelly_3em_live ORDER BY ts DESC LIMIT 1", conn)
                     use! reader = cmd.ExecuteReaderAsync()
                     if reader.Read() then
-                        let imp = if reader.IsDBNull(0) then None else Some (reader.GetDouble(0))
-                        let exp = if reader.IsDBNull(1) then None else Some (reader.GetDouble(1))
-                        return (imp, exp)
-                    else return (None, None)
-                with _ -> return (None, None)
+                        let g i = if reader.IsDBNull(i) then None else Some (reader.GetDouble(i))
+                        return { ImportPower = g 0; ExportPower = g 1; AActPower = g 2; BActPower = g 3; CActPower = g 4 }
+                    else return { ImportPower = None; ExportPower = None; AActPower = None; BActPower = None; CActPower = None }
+                with _ -> return { ImportPower = None; ExportPower = None; AActPower = None; BActPower = None; CActPower = None }
         }
 
     let getRoiSettings () =

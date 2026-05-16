@@ -66,6 +66,9 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
             do! sensor "inv_power_factor"         "Inverter Power Factor"         "{{ value_json.powerFactor }}"         ""    ""            "measurement"
             do! sensor "inv_consumption"          "Inverter Consumption"          "{{ value_json.inverterConsumption }}" "W"   "power"       "measurement"
             do! sensor "inv_house_consumption"    "House Consumption"             "{{ value_json.houseConsumption }}"    "W"   "power"       "measurement"
+            do! sensor "inv_house_consumption_a" "House Consumption Phase A"     "{{ value_json.houseConsumptionA }}"   "W"   "power"       "measurement"
+            do! sensor "inv_house_consumption_b" "House Consumption Phase B"     "{{ value_json.houseConsumptionB }}"   "W"   "power"       "measurement"
+            do! sensor "inv_house_consumption_c" "House Consumption Phase C"     "{{ value_json.houseConsumptionC }}"   "W"   "power"       "measurement"
             logger.LogInformation("MQTT discovery published.")
         }
 
@@ -137,11 +140,16 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     let pv2Power            = pv2Voltage * pv2Current
                     let pvTotalPower        = pv1Power + pv2Power
                     let inverterConsumption = pvTotalPower - activePower - batteryPower
-                    let! (importPower, exportPower) = Database.getLatestShellyPower()
+                    let! shelly = Database.getLatestShellyPower()
                     let houseConsumption =
-                        match importPower, exportPower with
+                        match shelly.ImportPower, shelly.ExportPower with
                         | Some imp, Some exp -> Some (activePower + imp - exp)
                         | _ -> None
+                    let phaseHouse (shellyPhase: float option) (invV: float) (invI: float) =
+                        shellyPhase |> Option.map (fun p -> p + invV * invI)
+                    let houseA = phaseHouse shelly.AActPower l1Voltage l1Current
+                    let houseB = phaseHouse shelly.BActPower l2Voltage l2Current
+                    let houseC = phaseHouse shelly.CActPower l3Voltage l3Current
 
                     state.UpdateData "pv1Voltage"    (pv1Voltage   :> obj)
                     state.UpdateData "pv1Current"    (pv1Current   :> obj)
@@ -167,9 +175,12 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     state.UpdateData "batteryPower"         (batteryPower        :> obj)
                     state.UpdateData "inverterConsumption"  (inverterConsumption :> obj)
                     houseConsumption |> Option.iter (fun v -> state.UpdateData "houseConsumption" (v :> obj))
+                    houseA |> Option.iter (fun v -> state.UpdateData "houseConsumptionA" (v :> obj))
+                    houseB |> Option.iter (fun v -> state.UpdateData "houseConsumptionB" (v :> obj))
+                    houseC |> Option.iter (fun v -> state.UpdateData "houseConsumptionC" (v :> obj))
 
                     state.SetConnected true
-                    do! Database.insertInverterLive true (state.GetData()) houseConsumption
+                    do! Database.insertInverterLive true (state.GetData()) houseConsumption houseA houseB houseC
                     logger.LogInformation("Poll OK — Grid: {0}W  PV: {1}W  Daily: {2}kWh  SOC: {3}%%", activePower, pvTotalPower, dailyYield, batterySOC)
                     let topic = config.["Mqtt:InverterTopic"]
                     let payload = System.Text.Json.JsonSerializer.Serialize({|
@@ -196,7 +207,10 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                         gridFrequency       = gridFreq
                         powerFactor         = powerFactor
                         inverterConsumption = inverterConsumption
-                        houseConsumption    = houseConsumption |> Option.defaultValue 0.0 |})
+                        houseConsumption    = houseConsumption |> Option.defaultValue 0.0
+                        houseConsumptionA   = houseA |> Option.defaultValue 0.0
+                        houseConsumptionB   = houseB |> Option.defaultValue 0.0
+                        houseConsumptionC   = houseC |> Option.defaultValue 0.0 |})
                     do! mqtt.Publish topic payload
                     do! Task.Delay(pollMs, stoppingToken)
 
