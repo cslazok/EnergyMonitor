@@ -177,7 +177,7 @@ module Database =
                 ()
         }
 
-    let insertInverterLive (connected: bool) (data: System.Collections.Generic.IDictionary<string, obj>) (houseConsumption: float option) (houseA: float option) (houseB: float option) (houseC: float option) =
+    let insertInverterLive (connected: bool) (data: System.Collections.Generic.IDictionary<string, obj>) (houseConsumption: float option) (houseA: float option) (houseB: float option) (houseC: float option) (dailyHouseKwh: float option) =
         task {
             match getConnString() with
             | None -> ()
@@ -192,14 +192,16 @@ module Database =
                      temperature, grid_frequency, power_factor, status,
                      l1_voltage, l1_current, l2_voltage, l2_current, l3_voltage, l3_current,
                      inverter_consumption, pv1_power, pv2_power, house_consumption_w,
-                     house_consumption_a_w, house_consumption_b_w, house_consumption_c_w)
+                     house_consumption_a_w, house_consumption_b_w, house_consumption_c_w,
+                     daily_house_consumption_kwh)
                     VALUES (@ts, @connected, @active_power, @pv_total_power,
                             @pv1_voltage, @pv1_current, @pv2_voltage, @pv2_current,
                             @daily_yield, @total_yield, @battery_soc, @battery_power,
                             @temperature, @grid_frequency, @power_factor, @status,
                             @l1_voltage, @l1_current, @l2_voltage, @l2_current, @l3_voltage, @l3_current,
                             @inverter_consumption, @pv1_power, @pv2_power, @house_consumption_w,
-                            @house_consumption_a_w, @house_consumption_b_w, @house_consumption_c_w)
+                            @house_consumption_a_w, @house_consumption_b_w, @house_consumption_c_w,
+                            @daily_house_consumption_kwh)
                 """
                 use cmd = new NpgsqlCommand(sql, conn)
                 let p (n: string) (v: obj) = cmd.Parameters.AddWithValue(n, v) |> ignore
@@ -234,9 +236,10 @@ module Database =
                 p "@pv2_power"            (f "pv2Power")
                 let optBox o = o |> Option.map box |> Option.defaultValue (box DBNull.Value)
                 p "@house_consumption_w"   (optBox houseConsumption)
-                p "@house_consumption_a_w" (optBox houseA)
-                p "@house_consumption_b_w" (optBox houseB)
-                p "@house_consumption_c_w" (optBox houseC)
+                p "@house_consumption_a_w"       (optBox houseA)
+                p "@house_consumption_b_w"       (optBox houseB)
+                p "@house_consumption_c_w"       (optBox houseC)
+                p "@daily_house_consumption_kwh" (optBox dailyHouseKwh)
                 let! _ = cmd.ExecuteNonQueryAsync()
                 ()
         }
@@ -408,6 +411,36 @@ module Database =
         BActPower:   float option
         CActPower:   float option
     }
+
+    let getDailyEnergyDelta () =
+        task {
+            match getConnString() with
+            | None -> return None
+            | Some connStr ->
+                try
+                    use conn = new NpgsqlConnection(connStr)
+                    do! conn.OpenAsync()
+                    use cmd1 = new NpgsqlCommand(
+                        "SELECT import_total_kwh, export_total_kwh FROM shelly_3em_energy WHERE ts >= NOW()::date AND import_total_kwh IS NOT NULL ORDER BY ts ASC LIMIT 1", conn)
+                    use! r1 = cmd1.ExecuteReaderAsync()
+                    let startOfDay =
+                        if r1.Read() && not (r1.IsDBNull(0)) && not (r1.IsDBNull(1))
+                        then Some (r1.GetDouble(0), r1.GetDouble(1))
+                        else None
+                    do! (r1 :> System.IAsyncDisposable).DisposeAsync()
+                    use cmd2 = new NpgsqlCommand(
+                        "SELECT import_total_kwh, export_total_kwh FROM shelly_3em_energy WHERE import_total_kwh IS NOT NULL ORDER BY ts DESC LIMIT 1", conn)
+                    use! r2 = cmd2.ExecuteReaderAsync()
+                    let current =
+                        if r2.Read() && not (r2.IsDBNull(0)) && not (r2.IsDBNull(1))
+                        then Some (r2.GetDouble(0), r2.GetDouble(1))
+                        else None
+                    return
+                        match startOfDay, current with
+                        | Some (si, se), Some (ci, ce) -> Some (ci - si, ce - se)
+                        | _ -> None
+                with _ -> return None
+        }
 
     let getLatestShellyPower () =
         task {
