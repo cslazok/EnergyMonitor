@@ -13,9 +13,10 @@ module Inverter =
         ActivePower:  float option
         DailyYield:   float option
         TotalYield:   float option
-        BatterySOC:   float option
-        BatteryPower: float option
-        Temperature:  float option
+        BatterySOC:       float option
+        BatteryPower:     float option
+        Temperature:      float option
+        HouseConsumption: float option
     }
 
     let private tryFloat (data: System.Collections.Generic.IDictionary<string, obj>) (key: string) =
@@ -47,7 +48,8 @@ module Inverter =
                 ActivePower  = tf "activePower"
                 DailyYield   = tf "dailyYield"
                 TotalYield   = tf "totalYield"
-                BatterySOC   = tf "batterySOC"
-                BatteryPower = tf "batteryPower"
-                Temperature  = tf "temperature"
+                BatterySOC       = tf "batterySOC"
+                BatteryPower     = tf "batteryPower"
+                Temperature      = tf "temperature"
+                HouseConsumption = tf "houseConsumption"
             }

@@ -116,6 +116,7 @@ module Views =
             div [ _class "row g-3 text-center" ] [
                 statCell "PV összteljesítmény" "text-warning" (optF "%.0f W"   inv.PvTotalPower)
                 statCell "Inverter kimenet"    "text-warning" (optF "%.0f W"   inv.ActivePower)
+                statCell "Ház fogyasztása"     "text-danger"  (optF "%.0f W"   inv.HouseConsumption)
                 statCell "Napi termelés"       "text-success" (optF "%.2f kWh" inv.DailyYield)
                 statCell "Összes termelés"     ""             (optF "%.1f kWh" inv.TotalYield)
                 statCell "Hőmérséklet"         ""             (optF "%.1f °C"  inv.Temperature)

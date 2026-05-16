@@ -65,6 +65,7 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
             do! sensor "inv_grid_frequency"       "Inverter Grid Frequency"       "{{ value_json.gridFrequency }}"       "Hz"  "frequency"   "measurement"
             do! sensor "inv_power_factor"         "Inverter Power Factor"         "{{ value_json.powerFactor }}"         ""    ""            "measurement"
             do! sensor "inv_consumption"          "Inverter Consumption"          "{{ value_json.inverterConsumption }}" "W"   "power"       "measurement"
+            do! sensor "inv_house_consumption"    "House Consumption"             "{{ value_json.houseConsumption }}"    "W"   "power"       "measurement"
             logger.LogInformation("MQTT discovery published.")
         }
 
@@ -132,10 +133,15 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     let batterySOC   = float b5.[0] * 0.1
                     let batteryPower = float (ModbusHelpers.toInt32 b5 5)
 
-                    let pv1Power           = pv1Voltage * pv1Current
-                    let pv2Power           = pv2Voltage * pv2Current
+                    let pv1Power            = pv1Voltage * pv1Current
+                    let pv2Power            = pv2Voltage * pv2Current
                     let pvTotalPower        = pv1Power + pv2Power
                     let inverterConsumption = pvTotalPower - activePower - batteryPower
+                    let! (importPower, exportPower) = Database.getLatestShellyPower()
+                    let houseConsumption =
+                        match importPower, exportPower with
+                        | Some imp, Some exp -> Some (activePower + imp - exp)
+                        | _ -> None
 
                     state.UpdateData "pv1Voltage"    (pv1Voltage   :> obj)
                     state.UpdateData "pv1Current"    (pv1Current   :> obj)
@@ -160,9 +166,10 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     state.UpdateData "batterySOC"           (batterySOC          :> obj)
                     state.UpdateData "batteryPower"         (batteryPower        :> obj)
                     state.UpdateData "inverterConsumption"  (inverterConsumption :> obj)
+                    houseConsumption |> Option.iter (fun v -> state.UpdateData "houseConsumption" (v :> obj))
 
                     state.SetConnected true
-                    do! Database.insertInverterLive true (state.GetData())
+                    do! Database.insertInverterLive true (state.GetData()) houseConsumption
                     logger.LogInformation("Poll OK — Grid: {0}W  PV: {1}W  Daily: {2}kWh  SOC: {3}%%", activePower, pvTotalPower, dailyYield, batterySOC)
                     let topic = config.["Mqtt:InverterTopic"]
                     let payload = System.Text.Json.JsonSerializer.Serialize({|
@@ -188,7 +195,8 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                         temperature         = temperature
                         gridFrequency       = gridFreq
                         powerFactor         = powerFactor
-                        inverterConsumption = inverterConsumption |})
+                        inverterConsumption = inverterConsumption
+                        houseConsumption    = houseConsumption |> Option.defaultValue 0.0 |})
                     do! mqtt.Publish topic payload
                     do! Task.Delay(pollMs, stoppingToken)
 
