@@ -16,10 +16,13 @@ type MqttPublisher(logger: ILogger<MqttPublisher>, config: IConfiguration) =
     let client     = factory.CreateMqttClient()
     let brokerIp   = config.["Mqtt:BrokerIp"]
     let brokerPort = int config.["Mqtt:BrokerPort"]
+    let username   = config.["Mqtt:Username"]
+    let password   = config.["Mqtt:Password"]
 
     let buildOptions () =
         MqttClientOptionsBuilder()
             .WithTcpServer(brokerIp, brokerPort)
+            .WithCredentials(username, password)
             .Build()
 
     member _.Publish (topic: string) (payload: string) =
@@ -48,6 +51,8 @@ type ShellyMqttService(logger: ILogger<ShellyMqttService>, config: IConfiguratio
 
     let brokerIp    = config.["Mqtt:BrokerIp"]
     let brokerPort  = int config.["Mqtt:BrokerPort"]
+    let username    = config.["Mqtt:Username"]
+    let password    = config.["Mqtt:Password"]
     let emTopic     = config.["Mqtt:ShellyEmTopic"]
     let emdataTopic = config.["Mqtt:ShellyEmdataTopic"]
 
@@ -129,6 +134,7 @@ type ShellyMqttService(logger: ILogger<ShellyMqttService>, config: IConfiguratio
                         let opts =
                             MqttClientOptionsBuilder()
                                 .WithTcpServer(brokerIp, brokerPort)
+                                .WithCredentials(username, password)
                                 .Build()
                         let! _ = client.ConnectAsync(opts, stoppingToken)
                         logger.LogInformation("Shelly MQTT connected to {0}:{1}", brokerIp, brokerPort)
