@@ -149,10 +149,10 @@ type ModbusReaderService(logger: ILogger<ModbusReaderService>, config: IConfigur
                     let! shelly = Database.getLatestShellyPower()
                     let houseConsumption =
                         match shelly.ImportPower, shelly.ExportPower with
-                        | Some imp, Some exp -> Some (activePower + imp - exp)
+                        | Some imp, Some exp -> Some (max 0.0 (activePower + imp - exp))
                         | _ -> None
                     let phaseHouse (shellyPhase: float option) (invV: float) (invI: float) =
-                        shellyPhase |> Option.map (fun p -> p + invV * invI)
+                        shellyPhase |> Option.map (fun p -> max 0.0 (p + invV * invI))
                     let houseA = phaseHouse shelly.AActPower l1Voltage l1Current
                     let houseB = phaseHouse shelly.BActPower l2Voltage l2Current
                     let houseC = phaseHouse shelly.CActPower l3Voltage l3Current
